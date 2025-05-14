@@ -1,0 +1,2 @@
+for example, a mistral3b.gguf
+https://llm.extractum.io/model/TheBloke%2FGale-medium-init-3B-GGUF,4hz46N5Nidvlj94MpqRT5H
