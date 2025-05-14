@@ -6,7 +6,7 @@
 
 Valiax is a local-first platform for conversational data quality governance. It lets you define, version, execute and monitor validation rules using natural language. Ideal for data engineers, analysts, and stewards who want to bridge business intent and technical validation — without writing complex SQL or Python manually.
 
-Check out the wiki for more information.
+*This is a developer preview version. Check out the wiki for more information.* 
 
 ---
 
@@ -32,4 +32,20 @@ If you’d like to contribute regularly, feel free to open an issue or contact t
 
 ## 📝 License
 
-MIT © 2025 — [thiwi](https://github.com/thiwi)
+Copyright (c) 2025 Thilo Wilts
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to use, copy,
+modify, and distribute the Software for **personal, non-commercial purposes only**.
+
+Commercial use of this Software, including but not limited to using the Software
+as part of a commercial product, service, platform, or SaaS offering, is
+**strictly prohibited** without explicit written permission from the copyright holder.
+
+The Software is provided “as is”, without warranty of any kind, express or implied,
+including but not limited to the warranties of merchantability, fitness for a particular purpose,
+and noninfringement. In no event shall the authors or copyright holders be liable
+for any claim, damages, or other liability arising from the use of the Software.
+
+For commercial licensing inquiries, contact: [thilowilts@googlemail.com]
+
