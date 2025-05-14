@@ -1,3 +1,5 @@
+<img width="300px" src="https://github.com/user-attachments/assets/ea1d1dda-b820-4485-8263-e5799ced27a8" />
+
 # Valiax
 
 *Data Quality Intelligence. In a Simple Conversation.*
