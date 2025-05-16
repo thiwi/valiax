@@ -19,7 +19,6 @@ Valiax is a local-first platform for conversational data quality governance. It 
 - ✅ **Visual dashboard**: charts, KPIs, and table-level insights
 - ✅ **Modular architecture**: built with FastAPI, React, PostgreSQL, and local LLM
 - ✅ **Fully local**: no cloud dependencies
-- 
 ---
 
 ## 🤝 Contributing
