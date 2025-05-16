@@ -32,8 +32,6 @@ If you’d like to contribute regularly, feel free to open an issue or contact t
 
 ## 📝 License
 
-## License
-
 This project is licensed under the [MIT License](./LICENSE).  
 You are free to use, modify, and distribute this software in both personal and commercial contexts.
 
