@@ -32,20 +32,14 @@ If you’d like to contribute regularly, feel free to open an issue or contact t
 
 ## 📝 License
 
-Copyright (c) 2025 Thilo Wilts
+This project is source-available but **not** open source according to the Open Source Initiative (OSI) definition.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the “Software”), to use, copy,
-modify, and distribute the Software for **personal, non-commercial purposes only**.
+You are permitted to use, copy, modify, and share the code **free of charge for personal, non-commercial purposes only**.  
+**Commercial use** — including use as part of a commercial product, service, platform, or SaaS offering — is **strictly prohibited** without explicit written permission from the author.
 
-Commercial use of this Software, including but not limited to using the Software
-as part of a commercial product, service, platform, or SaaS offering, is
-**strictly prohibited** without explicit written permission from the copyright holder.
+The code is provided "as is", without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or noninfringement.
 
-The Software is provided “as is”, without warranty of any kind, express or implied,
-including but not limited to the warranties of merchantability, fitness for a particular purpose,
-and noninfringement. In no event shall the authors or copyright holders be liable
-for any claim, damages, or other liability arising from the use of the Software.
+For commercial licensing inquiries, please contact: **info@valiax.eu**  
+For full legal terms, see the [`LICENSE`](./LICENSE) file.
 
-For commercial licensing inquiries, contact: [thilowilts@googlemail.com]
 
