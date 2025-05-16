@@ -32,14 +32,12 @@ If you’d like to contribute regularly, feel free to open an issue or contact t
 
 ## 📝 License
 
-This project is source-available but **not** open source according to the Open Source Initiative (OSI) definition.
+## License
 
-You are permitted to use, copy, modify, and share the code **free of charge for personal, non-commercial purposes only**.  
-**Commercial use** — including use as part of a commercial product, service, platform, or SaaS offering — is **strictly prohibited** without explicit written permission from the author.
+This project is licensed under the [MIT License](./LICENSE).  
+You are free to use, modify, and distribute this software in both personal and commercial contexts.
 
-The code is provided "as is", without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or noninfringement.
+© 2025 Thilo Wilts
 
-For commercial licensing inquiries, please contact: **info@valiax.eu**  
-For full legal terms, see the [`LICENSE`](./LICENSE) file.
 
 
