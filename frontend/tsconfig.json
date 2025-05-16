@@ -8,14 +8,16 @@
       "allowSyntheticDefaultImports": true,
       "strict": true,
       "forceConsistentCasingInFileNames": true,
+      "noFallthroughCasesInSwitch": true,
       "module": "esnext",
       "moduleResolution": "node",
       "resolveJsonModule": true,
       "isolatedModules": true,
       "noEmit": true,
-    "jsx": "react-jsx",
-    "typeRoots": ["node_modules/@types"]
+      "jsx": "react-jsx",
+      "typeRoots": ["node_modules/@types"],
+      "types": ["jest", "node"]
     },
-    "include": ["src/**/*", "src/globals.d.ts"],
+    "include": ["src/**/*", "tests/**/*", "src/globals.d.ts"],
     "exclude": ["node_modules", "build", "scripts"]
   }
