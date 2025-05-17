@@ -5,6 +5,7 @@ set -e
 echo "🔁 Building and running backend tests in Docker..."
 docker-compose -f infra/docker-compose.test.yml up --abort-on-container-exit --build test-backend
 BACKEND_EXIT_CODE=$?
+BACKEND_EXIT_CODE=1
 
 echo "🔁 Running frontend tests in Docker..."
 docker-compose -f infra/docker-compose.test.yml run --rm test-frontend

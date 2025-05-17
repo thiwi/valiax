@@ -21,10 +21,11 @@ module.exports = {
     '!**/node_modules/**'
   ],
   transform: {
-    '^.+\\.(js|jsx)$': 'babel-jest'
+    '^.+\\.(ts|tsx)$': 'ts-jest',
+    '^.+\\.m?js$': 'babel-jest'
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!.*\\.mjs$)'
+    '/node_modules/(?!(axios|.*\\.mjs$))'
   ],
   coverageThreshold: {
     global: {

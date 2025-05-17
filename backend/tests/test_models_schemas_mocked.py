@@ -1,3 +1,10 @@
+"""
+test_models_schemas_mocked.py
+-----------------------------
+Unit tests for the mock-based validation of SQLAlchemy models and Pydantic schemas.
+- Verifies that model constructors correctly set attributes and default UUIDs.
+- Ensures Pydantic schemas correctly accept and emit data via `model_dump()`.
+"""
 import unittest
 from unittest.mock import MagicMock, patch
 import uuid
@@ -71,7 +78,9 @@ sys.modules['app.models'].ColumnRule = MockColumnRule
 sys.modules['app.models'].RuleResult = MockRuleResult
 sys.modules['app.models'].RuleRun = MockRuleRun
 
+# TestModels: validate attribute setting and UUID generation on mock model classes
 class TestModels(unittest.TestCase):
+    # Test: DBConnection model should have correct name, connection_string, and auto-generated UUID
     def test_db_connection_model(self):
         # Create a DBConnection instance
         conn = MockDBConnection(
@@ -87,6 +96,7 @@ class TestModels(unittest.TestCase):
         self.assertIsNotNone(conn.id)
         self.assertIsInstance(conn.id, uuid.UUID)
     
+    # Test: ColumnRule model should set all fields correctly and generate UUID
     def test_column_rule_model(self):
         # Create a ColumnRule instance
         conn_id = uuid.uuid4()
@@ -115,6 +125,7 @@ class TestModels(unittest.TestCase):
         self.assertIsNotNone(rule.id)
         self.assertIsInstance(rule.id, uuid.UUID)
     
+    # Test: RuleResult model should set rule_id and result, and generate UUID
     def test_rule_result_model(self):
         # Create a RuleResult instance
         rule_id = uuid.uuid4()
@@ -131,6 +142,7 @@ class TestModels(unittest.TestCase):
         self.assertIsNotNone(result.id)
         self.assertIsInstance(result.id, uuid.UUID)
     
+    # Test: RuleRun model should set timing and status fields and generate UUID
     def test_rule_run_model(self):
         # Create a RuleRun instance
         from datetime import datetime
@@ -162,7 +174,9 @@ class TestModels(unittest.TestCase):
         self.assertIsNotNone(run.id)
         self.assertIsInstance(run.id, uuid.UUID)
 
+# TestSchemas: ensure Pydantic schemas accept inputs and output correct dictionaries
 class TestSchemas(unittest.TestCase):
+    # Test: DBConnectionCreate schema validates input and `model_dump()` returns expected dict
     def test_db_connection_create_schema(self):
         # Create a DBConnectionCreate instance
         conn = schemas.DBConnectionCreate(
@@ -181,6 +195,7 @@ class TestSchemas(unittest.TestCase):
             "connection_string": "postgresql://user:pass@localhost/testdb"
         })
     
+    # Test: DBConnectionRead schema contains id, name, and connection_string
     def test_db_connection_read_schema(self):
         # Create a DBConnectionRead instance
         conn_id = uuid.uuid4()
@@ -195,6 +210,7 @@ class TestSchemas(unittest.TestCase):
         self.assertEqual(conn.name, "Test DB")
         self.assertEqual(conn.connection_string, "postgresql://user:pass@localhost/testdb")
     
+    # Test: ConnectionTestRequest schema accepts a connection string
     def test_connection_test_request_schema(self):
         # Create a ConnectionTestRequest instance
         req = schemas.ConnectionTestRequest(
@@ -204,6 +220,7 @@ class TestSchemas(unittest.TestCase):
         # Check that the attributes are set correctly
         self.assertEqual(req.connection_string, "postgresql://user:pass@localhost/testdb")
     
+    # Test: ConnectionTestResponse schema defaults detail to None and respects provided detail
     def test_connection_test_response_schema(self):
         # Create a ConnectionTestResponse instance with success
         resp_success = schemas.ConnectionTestResponse(
