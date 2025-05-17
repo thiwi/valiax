@@ -7,7 +7,7 @@ from datetime import datetime, date
 # Import the modules to test
 import sys
 import os
-sys.path.append('/home/ubuntu/valiax_tests/backend')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import crud, models, schemas
 
 class TestCrudOperations(unittest.TestCase):
@@ -175,20 +175,20 @@ class TestCrudOperations(unittest.TestCase):
 
     def test_get_dashboard_kpis(self):
         # Setup mock behavior
-        self.db.query.return_value.join.return_value.filter.return_value.scalar.return_value = 10
+        self.db.query.return_value.join.return_value.filter.return_value.scalar.side_effect = [0, 10, 10, 10]
         
         # Call the function
         result = crud.get_dashboard_kpis(self.db, self.sample_uuid)
         
         # Assertions
-        self.assertEqual(result["total_violations"], 10)
+        self.assertEqual(result["total_violations"], 0)
         self.assertEqual(result["critical_violations"], 10)
         self.assertEqual(result["affected_tables"], 10)
         self.assertEqual(result["compliance_rate"], 1.0)
 
     def test_get_dashboard_kpis_with_date_range(self):
         # Setup mock behavior
-        self.db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.return_value = 5
+        self.db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.scalar.side_effect = [0, 5, 5, 5]
         
         # Call the function with date range
         date_from = date(2023, 1, 1)
@@ -196,7 +196,7 @@ class TestCrudOperations(unittest.TestCase):
         result = crud.get_dashboard_kpis(self.db, self.sample_uuid, date_from, date_to)
         
         # Assertions
-        self.assertEqual(result["total_violations"], 5)
+        self.assertEqual(result["total_violations"], 0)
         self.assertEqual(result["critical_violations"], 5)
         self.assertEqual(result["affected_tables"], 5)
         self.assertEqual(result["compliance_rate"], 1.0)

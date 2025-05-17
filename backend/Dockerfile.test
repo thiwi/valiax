@@ -1,0 +1,13 @@
+FROM python:3.11-slim
+WORKDIR /app
+
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# Falls pytest nicht in requirements.txt steht, explizit installieren
+RUN pip install --no-cache-dir pytest
+
+COPY . /app
+
+# Standardmäßig unittest ausführen
+CMD ["python", "-m", "unittest", "discover", "-s", "tests"]

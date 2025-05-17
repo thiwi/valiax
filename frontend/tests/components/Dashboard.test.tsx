@@ -1,9 +1,9 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
-import Dashboard from '../../../frontend/src/components/dashboard/Dashboard';
+import Dashboard from 'src/components/dashboard/Dashboard';
 
 // Mock the store
-jest.mock('../../../frontend/src/store/store', () => ({
+jest.mock('src/store/store', () => ({
   useStore: jest.fn(() => ({
     databases: [{ id: '1', name: 'Test DB', connStr: 'postgresql://test' }],
     selectedDatabase: '1',
@@ -21,7 +21,7 @@ jest.mock('../../../frontend/src/store/store', () => ({
 }));
 
 // Mock the hooks and components used by Dashboard
-jest.mock('../../../frontend/src/hooks/useDbConnections', () => ({
+jest.mock('src/hooks/useDbConnections', () => ({
   useDbConnections: jest.fn(() => ({
     dbConns: [
       { id: '1', name: 'Test DB', connStr: 'postgresql://user:pass@localhost/db' }
@@ -32,28 +32,28 @@ jest.mock('../../../frontend/src/hooks/useDbConnections', () => ({
 }));
 
 // Mock child components
-jest.mock('../../../frontend/src/components/dashboard/KpiTiles', () => ({
+jest.mock('src/components/dashboard/KpiTiles', () => ({
   __esModule: true,
   default: () => <div data-testid="kpi-tiles">KPI Tiles</div>
 }));
 
-jest.mock('../../../frontend/src/components/dashboard/TrendChart', () => ({
+jest.mock('src/components/dashboard/TrendChart', () => ({
   __esModule: true,
   default: () => <div data-testid="trend-chart">Trend Chart</div>
 }));
 
-jest.mock('../../../frontend/src/components/dashboard/TopRules', () => ({
+jest.mock('src/components/dashboard/TopRules', () => ({
   __esModule: true,
   default: () => <div data-testid="top-rules">Top Rules</div>
 }));
 
-jest.mock('../../../frontend/src/components/dashboard/TopTables', () => ({
+jest.mock('src/components/dashboard/TopTables', () => ({
   __esModule: true,
   default: () => <div data-testid="top-tables">Top Tables</div>
 }));
 
 // Mock the Dashboard component itself to avoid MUI dependencies
-jest.mock('../../../frontend/src/components/dashboard/Dashboard', () => {
+jest.mock('src/components/dashboard/Dashboard', () => {
   return function MockDashboard() {
     return (
       <div>

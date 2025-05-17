@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: valiax_test
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"  # anderer Port als Standard
+
+  test-backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.test
+    environment:
+      DATABASE_URL: postgresql://user:password@postgres:5432/valiax_test
+    command: ["pytest", "tests/"]
+    volumes:
+      - ../backend:/app
+    depends_on:
+      - postgres
+
+
+  test-frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.test
+    working_dir: /app
+    volumes:
+      - ../frontend:/app

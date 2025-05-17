@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { useDbConnections } from '../../../frontend/src/hooks/useDbConnections';
+import { useDbConnections } from 'src/hooks/useDbConnections';
 import React from 'react';
 
 // Mock the useDbConnections hook
-jest.mock('../../../frontend/src/hooks/useDbConnections', () => ({
+jest.mock('src/hooks/useDbConnections', () => ({
   useDbConnections: jest.fn()
 }));
 

@@ -1,10 +1,10 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ChatForm from '../../../frontend/src/components/chat/ChatForm';
+import ChatForm from 'src/components/chat/ChatForm';
 
 // Mock the ChatForm component's dependencies and state
-jest.mock('../../../frontend/src/components/chat/ChatForm', () => {
+jest.mock('src/components/chat/ChatForm', () => {
   const MockChatForm = ({ onSubmit, ...rest }: { onSubmit: (message: string) => void } & Partial<Record<string, unknown>>) => {
     return (
       <div>

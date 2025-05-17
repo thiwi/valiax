@@ -75,8 +75,16 @@ const IncludeColumnsModal: React.FC<IncludeColumnsModalProps> = ({
    */
   useEffect(() => {
     tables.forEach(table => {
-      if (!loadingColumns[table] && !tableColumns[table] && !errorColumns[table]) {
-        fetch(`/api/db-connections/${connectionId}/tables/${encodeURIComponent(table)}/columns`)
+      if (
+        connectionId &&
+        table &&
+        !loadingColumns[table] &&
+        !tableColumns[table] &&
+        !errorColumns[table]
+      ) {
+        console.log("connectionId", connectionId);
+        console.log("fetching", `${process.env.REACT_APP_API_URL}/api/db-connections/${connectionId}/tables/${table}/columns`);
+        fetch(`${process.env.REACT_APP_API_URL}/api/db-connections/${connectionId}/tables/${encodeURIComponent(table)}/columns`)
           .then(res => res.json())
           .then((data: any) => {
             const cols: string[] = Array.isArray(data)
