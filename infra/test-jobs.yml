@@ -1,0 +1,84 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-backend
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      volumes:
+      - name: postgres-data
+        emptyDir: {}
+      - name: init-scripts
+        configMap:
+          name: backend-initdb
+      - name: test-results
+        hostPath:
+          path: /mnt/data/test-results
+          type: DirectoryOrCreate
+      containers:
+      - name: test-backend
+        image: backend:latest
+        imagePullPolicy: IfNotPresent
+        workingDir: /app
+        command:
+          - "/bin/sh"
+          - "-c"
+          - |
+            echo '🚀 Waiting for PostgreSQL...' \
+            && until pg_isready -h localhost -p 5432 -U user; do sleep 1; done \
+            && pytest -v --maxfail=1 --disable-warnings --junitxml=/reports/backend-results.xml
+        env:
+        - name: DATABASE_URL
+          value: postgresql://user:password@localhost:5432/valiax_test
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+        - name: test-results
+          mountPath: /reports
+      - name: postgres
+        image: postgres:13-alpine
+        env:
+        - name: POSTGRES_USER
+          value: "user"
+        - name: POSTGRES_PASSWORD
+          value: "password"
+        - name: POSTGRES_DB
+          value: "valiax_test"
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-frontend
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      volumes:
+      - name: test-results
+        hostPath:
+          path: /mnt/data/test-results
+          type: DirectoryOrCreate
+      containers:
+      - name: test-frontend
+        image: frontend:latest
+        imagePullPolicy: IfNotPresent
+        workingDir: /app
+        command:
+          - "npx"
+          - "jest"
+          - "--config=jest.config.js"
+          - "--runInBand"
+          - "--watchAll=false"
+          - "--json"
+          - "--outputFile=/reports/frontend-results.json"
+        volumeMounts:
+        - name: test-results
+          mountPath: /reports
+      restartPolicy: Never

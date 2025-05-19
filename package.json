@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "auto-changelog": "^2.5.0"
+  },
+  "auto-changelog": {
+  "output": "CHANGELOG.md",
+  "template": "keepachangelog",
+  "unreleased": true,
+  "hideCredit": true
+},
+"scripts": {
+  "changelog": "auto-changelog"
+}
+
+}

@@ -1,0 +1,357 @@
+# infra/deployment.yml
+
+---
+# PersistentVolumeClaims for Postgres and the two ecommerce DBs
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgdata
+spec:
+  accessModes: [ ReadWriteOnce ]
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ecommerce-data1
+spec:
+  accessModes: [ ReadWriteOnce ]
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ecommerce-data2
+spec:
+  accessModes: [ ReadWriteOnce ]
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# Postgres (Valiax)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        env:
+        - name: POSTGRES_DB
+          value: "Valiax"
+        - name: POSTGRES_USER
+          value: "user"
+        - name: POSTGRES_PASSWORD
+          value: "password"
+        volumeMounts:
+        - name: pgdata
+          mountPath: /var/lib/postgresql/data
+        - name: initdb
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: pgdata
+        persistentVolumeClaim:
+          claimName: pgdata
+      - name: initdb
+        configMap:
+          name: backend-initdb
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector: { app: postgres }
+  ports:
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432
+
+---
+# Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: redis }
+  template:
+    metadata:
+      labels: { app: redis }
+    spec:
+      containers:
+      - name: redis
+        image: redis:7
+        ports:
+        - containerPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector: { app: redis }
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
+
+---
+# Backend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: backend:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DATABASE_URL
+          value: postgresql://user:password@postgres:5432/Valiax
+        ports:
+        - containerPort: 8000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector: { app: backend }
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+
+---
+# LLM Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm-service
+  template:
+    metadata:
+      labels:
+        app: llm-service
+    spec:
+      containers:
+      - name: llm-service
+        image: llm_service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-service
+spec:
+  selector: { app: llm-service }
+  ports:
+  - protocol: TCP
+    port: 9000
+    targetPort: 9000
+
+---
+# Worker
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: worker }
+  template:
+    metadata:
+      labels: { app: worker }
+    spec:
+      containers:
+      - name: worker
+        image: worker:latest
+        imagePullPolicy: IfNotPresent
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+spec:
+  selector: { app: worker }
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+---
+# Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: frontend }
+  template:
+    metadata:
+      labels: { app: frontend }
+    spec:
+      containers:
+      - name: frontend
+        image: frontend:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: REACT_APP_API_URL
+          value: http://backend:8000
+        ports:
+        - containerPort: 3000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: NodePort
+  selector: { app: frontend }
+  ports:
+  - protocol: TCP
+    port: 3000
+    targetPort: 3000
+    # let minikube pick a high-node-port
+
+---
+# Ecommerce DB #1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-db-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-db-1
+  template:
+    metadata:
+      labels:
+        app: ecommerce-db-1
+    spec:
+      containers:
+      - name: ecommerce-db-1
+        image: postgres:15
+        env:
+        - name: POSTGRES_DB
+          value: ecommerce
+        - name: POSTGRES_USER
+          value: ecom_user
+        - name: POSTGRES_PASSWORD
+          value: secret
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: ecommerce-data1
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: ecommerce-data1
+        persistentVolumeClaim:
+          claimName: ecommerce-data1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-db-1
+spec:
+  selector: { app: ecommerce-db-1 }
+  ports:
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432
+  # to expose on localhost:5433, you'll need a NodePort or port-forward
+
+---
+# Ecommerce DB #2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-db-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-db-2
+  template:
+    metadata:
+      labels:
+        app: ecommerce-db-2
+    spec:
+      containers:
+      - name: ecommerce-db-2
+        image: postgres:15
+        env:
+        - name: POSTGRES_DB
+          value: ecommerce
+        - name: POSTGRES_USER
+          value: ecom_user
+        - name: POSTGRES_PASSWORD
+          value: secret
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: ecommerce-data2
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: ecommerce-data2
+        persistentVolumeClaim:
+          claimName: ecommerce-data2
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-db-2
+spec:
+  selector: { app: ecommerce-db-2 }
+  ports:
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432

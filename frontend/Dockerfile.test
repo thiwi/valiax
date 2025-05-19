@@ -6,11 +6,15 @@ WORKDIR /app
 # Copy dependency definitions
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm install --legacy-peer-deps
+# Copy Jest configuration and test files
+COPY jest.config.js ./
+COPY tests ./tests
+
+# Install all dependencies (including dev) and force install despite peer dependency conflicts
+RUN npm install --legacy-peer-deps --force
 
 # Copy rest of the source code
 COPY . .
 
-# Run Jest tests in CI mode
-CMD ["npx", "jest", "--ci"]
+# Run Jest tests using custom config, no CI mode
+CMD ["npx", "jest", "--config=jest.config.js", "--runInBand", "--watchAll=false"]

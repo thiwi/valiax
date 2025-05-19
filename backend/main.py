@@ -48,7 +48,7 @@ app = FastAPI()
 # Enable CORS to allow the frontend (e.g. React) to communicate with this API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://chat.localtest.me"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
