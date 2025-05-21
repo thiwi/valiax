@@ -15,30 +15,117 @@ INSERT INTO db_connections (id, name, connection_string) VALUES
 ('848bdf25-427a-42c0-9739-e6926f0dd050', 'EcommerceDB1', 'postgresql://ecom_user:secret@ecommerce-db-1:5432/ecommerce'),
 ('a0069953-3266-44ee-b8c8-4d629a3b4e8a', 'EcommerceDB2', 'postgresql://ecom_user:secret@ecommerce-db-2:5432/ecommerce');
 
--- Insert column-level data quality rules into the column_rules table.
--- Columns:
---   db_connection_id: references the database connection this rule applies to
---   table_name: name of the table containing the column to be validated
---   column_name: name of the column to which the rule applies
---   rule_name: a short identifier for the rule
---   rule_text: the validation expression or condition as text (often SQL or pseudo-code)
---   severity: level of importance ('low', 'medium', 'critical')
---   description: human-readable explanation of the rule's purpose
---   interval: how frequently the rule should be checked (e.g., daily)
--- The rules cover checks like non-empty emails, positive quantities/prices, non-null flags
--- valid foreign key references, and allowed status values
 INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, rule_text, severity, description, interval) VALUES
-('848bdf25-427a-42c0-9739-e6926f0dd050','customers','email','NonEmptyEmail',$$value != ''$$,'low','Emails must not be empty','daily'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','order_items','quantity','PositiveQuantity','value > 0','medium','Order item quantity must be positive','daily'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','products','price','PositivePrice','value > 0','medium','Product price must be positive','daily'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','customers','email_verified','NotNullSignup','value IS NOT NULL','low','Email verified flag must not be null','daily'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','orders','customer_id','ValidCustomer','customer_id IN (SELECT id FROM customers)','critical','Order must have valid customer','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','clients','full_name','NonEmptyName',$$value != ''$$,'low','Client full name must not be empty','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','clients','contact_email','NonEmptyContactEmail',$$value != ''$$,'medium','Contact email must not be empty','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','items','cost_per_unit','PositiveCost',$$value > 0$$,'low','Item cost must be positive','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchases','purchase_status','ValidStatus',$$value IN ('shipped','processing','cancelled')$$,'critical','Purchase status must be valid','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchase_lines','count','PositiveCount',$$value > 0$$,'medium','Purchase line count must be positive','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchase_lines','price_each','PositivePrice',$$value > 0$$,'medium','Purchase line price must be positive','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','customers','email','NonEmptyEmail','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM customers WHERE email = ''")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','low','Emails must not be empty','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','order_items','quantity','PositiveQuantity','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM order_items WHERE quantity <= 0")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','medium','Order item quantity must be positive','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','products','price','PositivePrice','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM products WHERE price <= 0")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','medium','Product price must be positive','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','customers','email_verified','NotNullSignup','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM customers WHERE email_verified IS NULL")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','low','Email verified flag must not be null','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','orders','customer_id','ValidCustomer','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM orders WHERE customer_id NOT IN (SELECT id FROM customers)")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','critical','Order must have valid customer','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','clients','full_name','NonEmptyName','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM clients WHERE full_name = ''")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','low','Client full name must not be empty','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','clients','contact_email','NonEmptyContactEmail','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM clients WHERE contact_email = ''")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','medium','Contact email must not be empty','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','items','cost_per_unit','PositiveCost','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM items WHERE cost_per_unit <= 0")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','low','Item cost must be positive','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchases','purchase_status','ValidStatus','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM purchases WHERE purchase_status NOT IN ('shipped','processing','cancelled')")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','critical','Purchase status must be valid','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchase_lines','count','PositiveCount','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM purchase_lines WHERE count <= 0")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','medium','Purchase line count must be positive','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchase_lines','price_each','PositivePrice','''def rule(connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM purchase_lines WHERE price_each <= 0")
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        cursor.close()
+''','medium','Purchase line price must be positive','daily'),
 ('848bdf25-427a-42c0-9739-e6926f0dd050','order_items','unit_price','NegativeUnitPricePython','''def rule(connection):
     try:
         cursor = connection.cursor()
@@ -47,7 +134,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
     except Exception as e:
         return {"error": str(e)}
     finally:
-        cursor.close()''','medium','find negative prices','daily');
+        cursor.close()
+''','medium','find negative prices','daily');
 
 -- Insert simulated rule check results with failure status into the rule_results table.
 -- This uses a SELECT statement to generate multiple entries per rule with randomized timestamps and error details.
