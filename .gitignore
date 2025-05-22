@@ -10,9 +10,6 @@ __pycache__/
 env/
 venv/
 
-# Docker
-**/initdb/*.sql
-
 # VSCode
 .vscode/
 

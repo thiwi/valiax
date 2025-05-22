@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v0.2.0] - 2025-05-23
+
+- switched to kubernetes [`1488a17`](https://github.com/thiwi/valiax/commit/1488a17)
+
 ### Commits
 
 - initial [`3eee08d`](https://github.com/thiwi/valiax/commit/3eee08dad3c91e4f1f38d8099c710da24bbd6c0d)
