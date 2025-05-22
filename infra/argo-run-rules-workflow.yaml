@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argo
+  namespace: argo
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argo-workflow
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: argo
+    namespace: argo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argo-pod-patcher
+  namespace: argo
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argo-pod-patcher-binding
+  namespace: argo
+subjects:
+  - kind: ServiceAccount
+    name: argo
+    namespace: argo
+roleRef:
+  kind: Role
+  name: argo-pod-patcher
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: valiax-run-rules-cron
+  namespace: argo
+spec:
+  # Run every minute
+  schedule: "* * * * *"
+  timezone: "Europe/Berlin"
+  concurrencyPolicy: "Replace"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  workflowSpec:
+    serviceAccountName: argo
+    ttlStrategy:
+      secondsAfterCompletion: 900
+      secondsAfterSuccess: 900
+      secondsAfterFailure: 1800
+    entrypoint: run-all
+    arguments:
+      parameters:
+        - name: main-db-url
+          value: postgresql://user:password@postgres.default.svc.cluster.local:5432/Valiax
+
+    templates:
+    # Top-level DAG: list-groups -> run-group
+    - name: run-all
+      steps:
+        - - name: list-groups
+            template: list-groups
+        - - name: run-group
+            template: run-rules
+            withParam: "{{steps.list-groups.outputs.parameters.result}}"
+            arguments:
+              parameters:
+                - name: db-conn-id
+                  value: "{{item.db_conn_id}}"
+                - name: rule-ids
+                  value: "{{item.rule_ids}}"
+
+    # Fetch due rule IDs grouped by DB connection
+    - name: list-groups
+      container:
+        image: list-due-rules:latest
+        imagePullPolicy: Never
+        command: ["python"]
+        args: ["/scripts/list_due_rules.py"]
+        env:
+          - name: MAIN_DB_URL
+            value: "{{workflow.parameters.main-db-url}}"
+      outputs:
+        parameters:
+          - name: result
+            valueFrom:
+              path: /tmp/output.json
+
+    # Invoke runner API for one DB connection’s rules
+    - name: run-rules
+      inputs:
+        parameters:
+          - name: db-conn-id
+          - name: rule-ids
+      container:
+        image: appropriate/curl
+        command: ["sh", "-c"]
+        args:
+          - |
+            curl -X POST http://rule-runner.default.svc.cluster.local/run \
+              -H 'Content-Type: application/json' \
+              -d '{"db_conn_id":"{{inputs.parameters.db-conn-id}}","rule_ids":{{inputs.parameters.rule-ids}}}'

@@ -51,6 +51,9 @@ CREATE TABLE IF NOT EXISTS column_rules (
     -- Used for scheduling rule checks.
     interval VARCHAR(50) NOT NULL DEFAULT 'daily',
 
+    -- Indicates whether the rule is currently active and should be evaluated.
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+
     -- Timestamp recording when the rule was created, for auditing purposes.
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );

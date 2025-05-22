@@ -99,7 +99,7 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
 ('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchases','purchase_status','ValidStatus','''def rule(connection):
     try:
         cursor = connection.cursor()
-        cursor.execute("SELECT id FROM purchases WHERE purchase_status NOT IN ('shipped','processing','cancelled')")
+        cursor.execute("SELECT id FROM purchases WHERE purchase_status NOT IN (''''shipped'''',''''processing'''',''''cancelled'''')")
         return [row[0] for row in cursor.fetchall()]
     except Exception as e:
         return {"error": str(e)}
@@ -135,7 +135,7 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','medium','find negative prices','daily');
+''','medium','find negative prices','minutely');
 
 -- Insert simulated rule check results with failure status into the rule_results table.
 -- This uses a SELECT statement to generate multiple entries per rule with randomized timestamps and error details.
@@ -150,9 +150,9 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
 --     - errors: array of random error codes (integers) to simulate error details
 --     - duration_ms: randomized execution duration in milliseconds
 -- The CROSS JOIN LATERAL and generate_series create multiple such entries per rule to simulate multiple checks.
-INSERT INTO rule_results (detected_at, rule_id, result)
+INSERT INTO rule_results (last_run, rule_id, result)
 SELECT
-  NOW() - ((random() * 30) || ' days')::interval AS detected_at,
+  NOW() - ((random() * 30) || ' days')::interval AS last_run,
   cr.id AS rule_id,
   jsonb_build_object(
     'timestamp', to_char(NOW(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
@@ -179,9 +179,8 @@ CROSS JOIN generate_series(1, counts.cnt) AS g(i);
 -- Similar structure to the failure inserts, but status is 'success' and failed_rows is zero.
 -- The errors field is an empty JSON array.
 -- Generates between 200 and 400 success records per rule to simulate mostly passing checks.
-INSERT INTO rule_results (detected_at, rule_id, result)
+INSERT INTO rule_results (rule_id, result)
 SELECT
-  NOW() - ((random() * 30) || ' days')::interval AS detected_at,
   cr.id AS rule_id,
   jsonb_build_object(
     'timestamp', to_char(NOW(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
