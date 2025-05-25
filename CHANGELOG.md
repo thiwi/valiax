@@ -5,11 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [Unreleased](https://github.com/thiwi/valiax/compare/v0.2.1...HEAD)
 
-## [v0.2.0] - 2025-05-23
+## [v0.2.1](https://github.com/thiwi/valiax/compare/v0.2.0...v0.2.1) - 2025-05-25
 
-- switched to kubernetes [`1488a17`](https://github.com/thiwi/valiax/commit/1488a17)
+### Commits
+
+- switched from kubernetes-native runner to a custom [`2ba0fa7`](https://github.com/thiwi/valiax/commit/2ba0fa7c7bdb5e6f189cb310fb6c7e465554530f)
+- tag version [`24038d7`](https://github.com/thiwi/valiax/commit/24038d78d2aed8279a5a9d6352492d7c53b3f341)
+
+## v0.2.0 - 2025-05-23
 
 ### Commits
 
