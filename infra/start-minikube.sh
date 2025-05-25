@@ -1,72 +1,68 @@
+# start-minikube.sh: Script to set up a local Minikube cluster, build Docker images,
+# load them into Minikube, and deploy the Valiax application stack into the ‘valiax’ namespace.
 #!/bin/bash
 
+# Exit immediately if any command fails (non-zero exit)
 set -e
 
+# Determine the directory where this script resides for relative path resolution
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Define path to the Kubernetes manifest that contains all resource definitions
+DEPLOYMENT_FILE="$SCRIPT_DIR/deployment.yml"
+
+
 echo "🚀 Starting Minikube..."
+# Clean up any existing Minikube instance to ensure a fresh environment
 echo "🗑️ Deleting existing Minikube instance, if any..."
 minikube delete --all --purge || true
+
+# Start Minikube with Docker driver and allocate CPU/memory resources
 minikube start --driver=docker --cpus=4 --memory=4096
 
-echo "🐳 Building local Docker images for Valiax (host network for pip)…"
+# Configure kubectl to target the Minikube cluster and use the ‘valiax’ namespace
+kubectl config use-context minikube
+kubectl create namespace valiax || true
+kubectl config set-context --current --namespace=valiax
 
-docker build --network=host -t backend:latest ../backend
-#docker build --network=host --build-arg REACT_APP_API_URL="http://localhost:8000" -t frontend:latest ../frontend
-docker build --network=host -t worker:latest ../worker
-# Build rule-runner image
-docker build --network=host -t rule-runner:latest ../worker/runner
-#docker build --network=host -t llm_service:latest ../llm_service
 
-echo "🐋 Loading images into Minikube…"
-minikube image load backend:latest
-#minikube image load frontend:latest
-minikube image load worker:latest
-# Load rule-runner image into Minikube
-minikube image load rule-runner:latest
-#minikube image load llm_service:latest
+# Build local Docker images for components and load them into Minikube’s Docker daemon
+echo "🐳 Building and loading Docker images…"
+# List of images to build: tag and corresponding source directory
+declare -a IMAGES=(
+  "backend:latest ../backend"
+  "worker:latest ../worker"
+  "rule-runner:latest ../runner"
+)
+# Iterate over each image entry, build and load into Minikube
+for entry in "${IMAGES[@]}"; do
+  read -r TAG DIR <<< "$entry"
+  echo "  • Building $TAG from $DIR..."
+  docker build --network=host -t "$TAG" "$SCRIPT_DIR/$DIR"
+  echo "  • Loading $TAG into Minikube..."
+  minikube image load "$TAG"
+done
 
+# Create or update ConfigMap for backend initialization scripts
 echo "📑 Creating ConfigMap for init scripts…"
 kubectl create configmap backend-initdb --from-file=../backend/initdb --dry-run=client -o yaml | kubectl apply -f -
 
-echo "🔧 Installing Argo Workflows controller..."
-# Create Argo Workflows namespace if it does not exist
-kubectl create namespace argo || true
-# Install Argo Workflows controller and CRDs
-kubectl apply -n argo -f https://github.com/argoproj/argo-workflows/releases/download/v3.5.6/install.yaml
-
-echo "📜 Applying Argo workflow definition..."
-# Apply Workflow/CronWorkflow YAML from infra folder
-kubectl apply -f argo-run-rules-workflow.yaml
-
+# Apply all Kubernetes resource definitions from the deployment manifest
 echo "📦 Applying Kubernetes deployments..."
 
-echo "🐍 Building list-due-rules image..."
-docker build --network=host -t list-due-rules:latest ./scripts
+kubectl apply -f "$DEPLOYMENT_FILE"
 
-echo "🐋 Loading list-due-rules image into Minikube…"
-minikube image load list-due-rules:latest
-kubectl apply -f deployment.yml
-echo "🌐 Applying rule-runner service..."
-kubectl apply -f rule-runner-service.yaml
-kubectl apply -f rule-runner-deployment.yaml
+# Wait for all core deployments to become available before proceeding
+echo "⏳ Waiting for deployments to be available…"
+declare -a WAIT_DEPLOYMENTS=(backend worker celery-beat ecommerce-db-1 ecommerce-db-2 rule-runner)
+for dep in "${WAIT_DEPLOYMENTS[@]}"; do
+  echo "  • $dep"
+  kubectl rollout status deployment/"$dep" --timeout=120s
+done
 
-echo "⏳ Waiting for pods..."
-echo "⏳ Waiting for backend rollout (up to 120s)..."
-kubectl rollout status deployment/backend --timeout=120s
-#kubectl wait --for=condition=available --timeout=60s deployment/frontend
-
-# Wait for worker deployment
-kubectl wait --for=condition=available --timeout=60s deployment/worker
-
-# Wait for LLM service deployment
-#kubectl wait --for=condition=available --timeout=60s deployment/llm-service
-
-# Wait for ecommerce-db-1 deployment
-kubectl wait --for=condition=available --timeout=60s deployment/ecommerce-db-1
-
-# Wait for ecommerce-db-2 deployment
-kubectl wait --for=condition=available --timeout=60s deployment/ecommerce-db-2
-
+# Forward backend service port to localhost for local access
 echo "🔀 Port-forward backend: localhost:8000 → backend"
 nohup kubectl port-forward svc/backend 8000:8000 >/dev/null 2>&1 &
+
+# Notify user that the frontend is being opened in the default browser
 echo "🌐 Opening frontend in browser..."
-#minikube service frontend
