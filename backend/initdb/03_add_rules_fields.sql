@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS rule_results CASCADE;
 CREATE TABLE IF NOT EXISTS rule_results (
   -- Unique identifier for each rule result entry
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  -- Timestamp of the execution run that produced this result
+  last_run TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   -- Timestamp indicating when the rule violation or check was detected
   detected_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   -- Foreign key linking to the specific rule that generated this result; cascades deletes to maintain referential integrity

@@ -150,8 +150,9 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
 --     - errors: array of random error codes (integers) to simulate error details
 --     - duration_ms: randomized execution duration in milliseconds
 -- The CROSS JOIN LATERAL and generate_series create multiple such entries per rule to simulate multiple checks.
-INSERT INTO rule_results (detected_at, rule_id, result)
+INSERT INTO rule_results (last_run, detected_at, rule_id, result)
 SELECT
+  NOW() - ((random() * 30) || ' days')::interval AS last_run,
   NOW() - ((random() * 30) || ' days')::interval AS detected_at,
   cr.id AS rule_id,
   jsonb_build_object(
@@ -179,8 +180,10 @@ CROSS JOIN generate_series(1, counts.cnt) AS g(i);
 -- Similar structure to the failure inserts, but status is 'success' and failed_rows is zero.
 -- The errors field is an empty JSON array.
 -- Generates between 200 and 400 success records per rule to simulate mostly passing checks.
-INSERT INTO rule_results (rule_id, result)
+INSERT INTO rule_results (last_run, detected_at, rule_id, result)
 SELECT
+  NOW() - ((random() * 30) || ' days')::interval AS last_run,
+  NOW() - ((random() * 30) || ' days')::interval AS detected_at,
   cr.id AS rule_id,
   jsonb_build_object(
     'timestamp', to_char(NOW(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
