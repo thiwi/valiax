@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "auto-changelog": "^2.5.0"
+    "auto-changelog": "^2.5.0",
+    "serve": "^14.2.4"
   },
   "auto-changelog": {
   "output": "CHANGELOG.md",

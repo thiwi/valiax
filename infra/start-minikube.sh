@@ -14,8 +14,8 @@ DEPLOYMENT_FILE="$SCRIPT_DIR/deployment.yml"
 
 echo "🚀 Starting Minikube..."
 # Clean up any existing Minikube instance to ensure a fresh environment
-echo "🗑️ Deleting existing Minikube instance, if any..."
-minikube delete --all --purge || true
+# echo "🗑️ Deleting existing Minikube instance, if any..."
+# minikube delete --all --purge || true
 
 # Start Minikube with Docker driver and allocate CPU/memory resources
 minikube start --driver=docker --cpus=4 --memory=4096
@@ -33,6 +33,8 @@ declare -a IMAGES=(
   "backend:latest ../backend"
   "worker:latest ../worker"
   "rule-runner:latest ../runner"
+  "frontend:latest ../frontend"
+#  "llm-service:latest ../llm_service"
 )
 # Iterate over each image entry, build and load into Minikube
 for entry in "${IMAGES[@]}"; do
