@@ -155,9 +155,9 @@ class TestModels(unittest.TestCase):
             rule_id=rule_id,
             start_time=start_time,
             end_time=end_time,
-            duration_ms="100",
-            checked_rows="1000",
-            failed_rows="5",
+            duration_ms=100,
+            checked_rows=1000,
+            failed_rows=5,
             status="completed"
         )
         
@@ -165,9 +165,9 @@ class TestModels(unittest.TestCase):
         self.assertEqual(run.rule_id, rule_id)
         self.assertEqual(run.start_time, start_time)
         self.assertEqual(run.end_time, end_time)
-        self.assertEqual(run.duration_ms, "100")
-        self.assertEqual(run.checked_rows, "1000")
-        self.assertEqual(run.failed_rows, "5")
+        self.assertEqual(run.duration_ms, 100)
+        self.assertEqual(run.checked_rows, 1000)
+        self.assertEqual(run.failed_rows, 5)
         self.assertEqual(run.status, "completed")
         
         # Check that UUID is generated
@@ -189,7 +189,8 @@ class TestSchemas(unittest.TestCase):
         self.assertEqual(conn.connection_string, "postgresql://user:pass@localhost/testdb")
         
         # Check that the schema validates correctly
-        conn_dict = conn.model_dump()  # Using model_dump instead of deprecated dict()
+        # Use dict() for compatibility with both Pydantic v1 and v2
+        conn_dict = conn.dict() if hasattr(conn, 'dict') else conn.model_dump()
         self.assertEqual(conn_dict, {
             "name": "Test DB",
             "connection_string": "postgresql://user:pass@localhost/testdb"
