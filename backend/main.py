@@ -46,9 +46,15 @@ from app.schemas import DashboardKPI, DashboardTrendItem, DashboardTopViolations
 app = FastAPI()
 
 # Enable CORS to allow the frontend (e.g. React) to communicate with this API.
+origins_env = os.getenv("CORS_ORIGINS", "*")
+if origins_env == "*":
+    origins = ["*"]
+else:
+    origins = [o.strip() for o in origins_env.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow all origins for development
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
