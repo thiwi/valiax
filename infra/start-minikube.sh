@@ -33,14 +33,14 @@ declare -a IMAGES=(
   "backend:latest ../backend"
   "worker:latest ../worker"
   "rule-runner:latest ../runner"
-  "frontend:latest ../frontend"
+  "frontend:latest --build-arg REACT_APP_API_URL=http://backend:8000 ../frontend"
 #  "llm-service:latest ../llm_service"
 )
 # Iterate over each image entry, build and load into Minikube
 for entry in "${IMAGES[@]}"; do
-  read -r TAG DIR <<< "$entry"
-  echo "  • Building $TAG from $DIR..."
-  docker build --network=host -t "$TAG" "$SCRIPT_DIR/$DIR"
+  read -r TAG ARGS <<< "$entry"
+  echo "  • Building $TAG from $ARGS..."
+  docker build --network=host -t "$TAG" $ARGS
   echo "  • Loading $TAG into Minikube..."
   minikube image load "$TAG"
 done
@@ -68,3 +68,6 @@ nohup kubectl port-forward svc/backend 8000:8000 >/dev/null 2>&1 &
 
 # Notify user that the frontend is being opened in the default browser
 echo "🌐 Opening frontend in browser..."
+FRONTEND_URL=$(minikube service frontend --url -n valiax)
+echo "🌐 Frontend accessible at: $FRONTEND_URL"
+open "$FRONTEND_URL"
