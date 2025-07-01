@@ -28,18 +28,66 @@ def fetch_rules(main_db_url, rule_ids):
     conn.close()
     return rules
 
+import multiprocessing
+
+
 def exec_rule_sandbox(rule_text, target_conn):
-    # Assume this function executes the rule in a sandboxed environment
-    # and returns the result
-    # Placeholder implementation
-    cur = target_conn.cursor()
-    try:
-        cur.execute(rule_text)
-        result = cur.fetchall()
-    except Exception as e:
-        result = {"error": str(e)}
-    cur.close()
-    return result
+    """Execute ``rule_text`` as Python code using ``target_conn`` in a restricted
+    sandbox.
+
+    The sandbox disables imports and file/network access by limiting built-ins
+    and runs the code in a separate process which is terminated after one hour.
+    The executed code should store its result in a variable named ``result``.
+    """
+
+    def worker(code, conn, out):
+        # Define a minimal set of safe builtins
+        safe_builtins = {
+            "True": True,
+            "False": False,
+            "None": None,
+            "abs": abs,
+            "min": min,
+            "max": max,
+            "sum": sum,
+            "range": range,
+            "len": len,
+            "int": int,
+            "float": float,
+            "str": str,
+            "bool": bool,
+            "list": list,
+            "dict": dict,
+            "set": set,
+            "tuple": tuple,
+        }
+
+        # Block import statements to avoid access to the outside environment
+        def blocked_import(*_args, **_kwargs):  # pragma: no cover - simple guard
+            raise ImportError("Importing modules is disabled in sandbox")
+
+        safe_builtins["__import__"] = blocked_import
+
+        # Locals available to the executed rule
+        local_env = {"target_conn": conn}
+
+        try:
+            exec(code, {"__builtins__": safe_builtins}, local_env)
+            out["result"] = local_env.get("result")
+        except Exception as e:  # pragma: no cover - error path
+            out["error"] = str(e)
+
+    manager = multiprocessing.Manager()
+    result_holder = manager.dict()
+    proc = multiprocessing.Process(target=worker, args=(rule_text, target_conn, result_holder))
+    proc.start()
+    proc.join(3600)  # 1 hour timeout
+    if proc.is_alive():
+        proc.terminate()
+        proc.join()
+        return {"error": "timeout"}
+
+    return result_holder.get("result", result_holder.get("error"))
 
 class RunRequest(BaseModel):
     rule_ids: List[str]
