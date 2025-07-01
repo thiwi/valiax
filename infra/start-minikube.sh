@@ -33,7 +33,8 @@ declare -a IMAGES=(
   "backend:latest ../backend"
   "worker:latest ../worker"
   "rule-runner:latest ../runner"
-  "frontend:latest --build-arg REACT_APP_API_URL=http://backend:8000 ../frontend"
+  # Build the frontend so the generated JS calls the backend via the port-forward on localhost
+  "frontend:latest --build-arg REACT_APP_API_URL=http://localhost:8000 ../frontend"
 #  "llm-service:latest ../llm_service"
 )
 # Iterate over each image entry, build and load into Minikube
