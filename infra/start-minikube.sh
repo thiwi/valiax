@@ -68,6 +68,15 @@ nohup kubectl port-forward svc/backend 8000:8000 >/dev/null 2>&1 &
 
 # Notify user that the frontend is being opened in the default browser
 echo "🌐 Opening frontend in browser..."
-FRONTEND_URL=$(minikube service frontend --url -n valiax)
+# Query the NodePort assigned to the frontend service and compose the URL
+NODE_PORT=$(kubectl get svc frontend -n valiax -o jsonpath='{.spec.ports[0].nodePort}')
+MINIKUBE_IP=$(minikube ip)
+FRONTEND_URL="http://${MINIKUBE_IP}:${NODE_PORT}"
 echo "🌐 Frontend accessible at: $FRONTEND_URL"
-open "$FRONTEND_URL"
+
+# Open the frontend URL if a compatible open command exists
+if command -v open >/dev/null 2>&1; then
+  open "$FRONTEND_URL" || true
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open "$FRONTEND_URL" || true
+fi
