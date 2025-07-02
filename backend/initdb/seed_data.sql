@@ -16,7 +16,7 @@ INSERT INTO db_connections (id, name, connection_string) VALUES
 ('a0069953-3266-44ee-b8c8-4d629a3b4e8a', 'EcommerceDB2', 'postgresql://ecom_user:secret@ecommerce-db-2:5432/ecommerce');
 
 INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, rule_text, severity, description, interval) VALUES
-('848bdf25-427a-42c0-9739-e6926f0dd050','customers','email','NonEmptyEmail','''def rule(connection):
+('848bdf25-427a-42c0-9739-e6926f0dd050','customers','email','NonEmptyEmail','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM customers WHERE email = ''")
@@ -25,8 +25,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','low','Emails must not be empty','daily'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','order_items','quantity','PositiveQuantity','''def rule(connection):
+','low','Emails must not be empty','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','order_items','quantity','PositiveQuantity','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM order_items WHERE quantity <= 0")
@@ -35,8 +35,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','medium','Order item quantity must be positive','daily'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','products','price','PositivePrice','''def rule(connection):
+','medium','Order item quantity must be positive','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','products','price','PositivePrice','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM products WHERE price <= 0")
@@ -45,8 +45,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','medium','Product price must be positive','daily'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','customers','email_verified','NotNullSignup','''def rule(connection):
+','medium','Product price must be positive','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','customers','email_verified','NotNullSignup','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM customers WHERE email_verified IS NULL")
@@ -55,8 +55,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','low','Email verified flag must not be null','daily'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','orders','customer_id','ValidCustomer','''def rule(connection):
+','low','Email verified flag must not be null','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','orders','customer_id','ValidCustomer','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM orders WHERE customer_id NOT IN (SELECT id FROM customers)")
@@ -65,8 +65,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','critical','Order must have valid customer','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','clients','full_name','NonEmptyName','''def rule(connection):
+','critical','Order must have valid customer','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','clients','full_name','NonEmptyName','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM clients WHERE full_name = ''")
@@ -75,8 +75,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','low','Client full name must not be empty','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','clients','contact_email','NonEmptyContactEmail','''def rule(connection):
+','low','Client full name must not be empty','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','clients','contact_email','NonEmptyContactEmail','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM clients WHERE contact_email = ''")
@@ -85,8 +85,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','medium','Contact email must not be empty','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','items','cost_per_unit','PositiveCost','''def rule(connection):
+','medium','Contact email must not be empty','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','items','cost_per_unit','PositiveCost','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM items WHERE cost_per_unit <= 0")
@@ -95,8 +95,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','low','Item cost must be positive','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchases','purchase_status','ValidStatus','''def rule(connection):
+','low','Item cost must be positive','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchases','purchase_status','ValidStatus','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM purchases WHERE purchase_status NOT IN (''''shipped'''',''''processing'''',''''cancelled'''')")
@@ -105,8 +105,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','critical','Purchase status must be valid','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchase_lines','count','PositiveCount','''def rule(connection):
+','critical','Purchase status must be valid','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchase_lines','count','PositiveCount','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM purchase_lines WHERE count <= 0")
@@ -115,8 +115,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','medium','Purchase line count must be positive','daily'),
-('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchase_lines','price_each','PositivePrice','''def rule(connection):
+','medium','Purchase line count must be positive','daily'),
+('a0069953-3266-44ee-b8c8-4d629a3b4e8a','purchase_lines','price_each','PositivePrice','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM purchase_lines WHERE price_each <= 0")
@@ -125,8 +125,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','medium','Purchase line price must be positive','daily'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','order_items','unit_price','NegativeUnitPricePython','''def rule(connection):
+','medium','Purchase line price must be positive','daily'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','order_items','unit_price','NegativeUnitPricePython','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM order_items WHERE unit_price < 0")
@@ -135,8 +135,8 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         return {"error": str(e)}
     finally:
         cursor.close()
-''','medium','find negative prices','minutely'),
-('848bdf25-427a-42c0-9739-e6926f0dd050','products','price','NegativePriceCheck','''def rule(connection):
+','medium','find negative prices','minutely'),
+('848bdf25-427a-42c0-9739-e6926f0dd050','products','price','NegativePriceCheck','def rule(connection):
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM products WHERE price < 0")
@@ -145,7 +145,7 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         result = {"error": str(e)}
     finally:
         cursor.close()
-''','medium','detect negative product prices','minutely');
+','medium','detect negative product prices','minutely');
 
 -- Insert simulated rule check results with failure status into the rule_results table.
 -- This uses a SELECT statement to generate multiple entries per rule with randomized timestamps and error details.

@@ -1,2 +1,7 @@
 Test db connection in modal (running in docker) with: postgresql://ecom_user:secret@ecommerce-db-1:5432/ecommerce
 Test db connection in modal (running local) with: postgresql://ecom_user:secret@ecommerce-db-2:5432/ecommerce
+
+
+Port forwarding on mac:
+kubectl port-forward service/frontend 3000:3000 -n valiax
+kubectl port-forward svc/backend 8000:8000
