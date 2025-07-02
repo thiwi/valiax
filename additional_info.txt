@@ -5,3 +5,6 @@ Test db connection in modal (running local) with: postgresql://ecom_user:secret@
 Port forwarding on mac:
 kubectl port-forward service/frontend 3000:3000 -n valiax
 kubectl port-forward svc/backend 8000:8000
+
+kubectl exec -n valiax -it postgres-bf54d84f7-dsr2j -- bash
+psql -U user -d Valiax

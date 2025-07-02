@@ -137,6 +137,7 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
         cursor.close()
 ','medium','find negative prices','minutely'),
 ('848bdf25-427a-42c0-9739-e6926f0dd050','products','price','NegativePriceCheck','def rule(connection):
+    cursor = None
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM products WHERE price < 0")
@@ -144,7 +145,11 @@ INSERT INTO column_rules (db_connection_id, table_name, column_name, rule_name, 
     except Exception as e:
         result = {"error": str(e)}
     finally:
-        cursor.close()
+        if cursor is not None:
+            cursor.close()
+    return result
+
+result = rule(target_conn)
 ','medium','detect negative product prices','minutely');
 
 -- Insert simulated rule check results with failure status into the rule_results table.

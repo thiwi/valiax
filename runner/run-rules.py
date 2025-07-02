@@ -2,6 +2,7 @@ import os
 import json
 import datetime
 import psycopg2
+import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
@@ -60,6 +61,7 @@ def exec_rule_sandbox(rule_text, target_conn):
             "dict": dict,
             "set": set,
             "tuple": tuple,
+            "Exception": Exception,
         }
 
         # Block import statements to avoid access to the outside environment
@@ -69,7 +71,12 @@ def exec_rule_sandbox(rule_text, target_conn):
         safe_builtins["__import__"] = blocked_import
 
         # Locals available to the executed rule
-        local_env = {"target_conn": conn}
+        local_env = {
+            "target_conn": conn,
+            "pd": pd,
+            "datetime": datetime,
+            "psycopg2": psycopg2,
+        }
 
         try:
             exec(code, {"__builtins__": safe_builtins}, local_env)
@@ -130,13 +137,16 @@ def run_rules(request: RunRequest):
                 result = {"error": str(e)}
         finally:
             target_conn.close()
-        results[rule_id] = result
+        results[rule_id] = {
+            "result": result,
+            "db_connection": conn_str
+        }
         write_cur.execute(
             "INSERT INTO rule_results (rule_id, result) VALUES (%s, %s)",
-            (str(rule_id), json.dumps(result))
+            (str(rule_id), json.dumps(results[rule_id]))
         )
         write_conn.commit()
-        logger.info("Result for rule %s committed to database: %s", rule_id, result)
+        logger.info("Result for rule %s committed to database: %s", rule_id, results[rule_id])
     write_cur.close()
     write_conn.close()
     return {"results": results}
