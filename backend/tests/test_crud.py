@@ -16,6 +16,8 @@ from datetime import datetime, date
 # Import the modules to test
 import sys
 import os
+# Use an in-memory SQLite database to avoid external dependencies during tests
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import crud, models, schemas
 
@@ -267,6 +269,32 @@ class TestCrudOperations(unittest.TestCase):
         self.assertEqual(len(result["top_tables"]), 1)
         self.assertEqual(result["top_tables"][0]["table_name"], "Test Table")
         self.assertEqual(result["top_tables"][0]["count"], 8)
+
+    # Test: get_column_rule_by_name returns the matching rule when it exists
+    def test_get_column_rule_by_name_found(self):
+        # Setup mock behavior
+        self.db.query.return_value.filter.return_value.first.return_value = self.sample_rule
+
+        # Call the function
+        result = crud.get_column_rule_by_name(self.db, "Email Format Check")
+
+        # Assertions
+        self.db.query.assert_called_once_with(models.ColumnRule)
+        self.db.query.return_value.filter.assert_called_once()
+        self.assertEqual(result, self.sample_rule)
+
+    # Test: get_column_rule_by_name returns None when no rule is found
+    def test_get_column_rule_by_name_not_found(self):
+        # Setup mock behavior
+        self.db.query.return_value.filter.return_value.first.return_value = None
+
+        # Call the function
+        result = crud.get_column_rule_by_name(self.db, "Nonexistent Rule")
+
+        # Assertions
+        self.db.query.assert_called_once_with(models.ColumnRule)
+        self.db.query.return_value.filter.assert_called_once()
+        self.assertIsNone(result)
 
 if __name__ == '__main__':
     unittest.main()
