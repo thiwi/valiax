@@ -92,8 +92,11 @@ INSERT INTO products (name, description, price)
 SELECT
   'Product '||i,
   'Description for product '||i,
-  round((random()*100 + 1)::numeric, 2)
-FROM generate_series(1,50) AS t(i);
+  CASE
+    WHEN i <= 10 THEN -round((random()*100 + 1)::numeric, 2)
+    ELSE round((random()*100 + 1)::numeric, 2)
+  END
+FROM generate_series(1,100) AS t(i);
 
 -- Insert 30 orders
 -- Purpose: Creates 30 orders, each linked to a random customer.
