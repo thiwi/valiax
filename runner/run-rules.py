@@ -73,7 +73,12 @@ def exec_rule_sandbox(rule_text, target_conn):
 
         try:
             exec(code, {"__builtins__": safe_builtins}, local_env)
-            out["result"] = local_env.get("result")
+            if "result" in local_env:
+                out["result"] = local_env["result"]
+            elif "rule" in local_env and callable(local_env["rule"]):
+                out["result"] = local_env["rule"](conn)
+            else:
+                out["result"] = None
         except Exception as e:  # pragma: no cover - error path
             out["error"] = str(e)
 
