@@ -17,7 +17,7 @@ import ConnectionDetailModal from './components/db/DatabaseConnectionDetailModal
 import NewRuleModal from './components/db/NewRuleModal';
 import NewDatabaseConnectionModal from './components/db/NewDatabaseConnectionModal';
 
-import { AppBar, Toolbar, Typography, Button, Drawer, Box, Paper, Collapse } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Drawer, Box } from '@mui/material';
 
 import { useStore } from './store/store';
 import theme from './theme';
@@ -25,7 +25,6 @@ import { useTables } from './hooks/useTables';
 import { useDbConnections } from './hooks/useDbConnections';
 import { DBConn } from './types';
 import { ColumnRule } from './types';
-import { Message } from './types';
 import { useUI } from './hooks/useUi';
 
 
@@ -87,34 +86,7 @@ export default function App() {
   const selectedDbId = useStore(state => state.selectedDatabase);
   const selectedDbName = useStore(state => state.selectedDatabaseName);
 
-  /**
-   * Chat widget state:
-   * Manages expansion state, input text, message history, and loading state for sending messages.
-   */
-  const [expanded, setExpanded] = useState(false);
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
-  const historyRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Rule creation and editing state:
-   * Controls whether rule creation UI is active, selected columns for rules,
-   * expanded tables in the UI, and modal open state for adding/editing rules.
-   */
-  const [ruleCreation, setRuleCreation] = useState(false);
-  const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set());
-  const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
-
-  /**
-   * Column data state:
-   * Stores columns for each table, loading state per table, error messages per table,
-   * and whether the column modal is open.
-   */
-  const [tableColumns, setTableColumns] = useState<Record<string, string[]>>({});
-  const [loadingColumns, setLoadingColumns] = useState<Record<string, boolean>>({});
-  const [errorColumns, setErrorColumns] = useState<Record<string, string | null>>({});
-  const [columnModalOpen, setColumnModalOpen] = useState(false);
 
   /**
    * State for Add Rule modal:
@@ -194,15 +166,6 @@ export default function App() {
   }, [showDetail, hideDbMenu, toggleNav]);
 
   /**
-   * Placeholder handler for table clicks.
-   * Currently logs the clicked table name.
-   */
-  const handleTableClick = useCallback((tableName: string) => {
-    // Implement table click logic here
-    console.log('Table clicked:', tableName);
-  }, []);
-
-  /**
    * Handler for deleting a database connection.
    * Manages loading and error state, calls deleteConn, and hides detail modal on success.
    */
@@ -223,32 +186,7 @@ export default function App() {
   // Ref to hold a function for adding rules to the database selector component
   const addRuleToDatabaseSelector = useRef<((rule: ColumnRule) => void) | null>(null);
 
-  /**
-   * Handler for sending a chat message.
-   * Adds user message to history, clears input, and simulates loading.
-   */
-  const handleSend = () => {
-    // TODO: implement sending logic
-    if (!input.trim()) return;
-    setMessages(prev => [...prev, { from: 'user', text: input }]);
-    setInput('');
-    // mimic loading state
-    setLoading(true);
-    setTimeout(() => setLoading(false), 500);
-  };
 
-  /**
-   * Handler to toggle expansion of tables in the UI.
-   * Adds or removes the table from the expanded set.
-   */
-  const handleToggleTable = (table: string) => {
-    setExpandedTables(prev => {
-      const next = new Set(prev);
-      if (next.has(table)) next.delete(table);
-      else next.add(table);
-      return next;
-    });
-  };
 
   return (
     <>
@@ -382,3 +320,4 @@ export default function App() {
     </>
   );
 }
+
