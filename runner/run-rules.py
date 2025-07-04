@@ -5,8 +5,9 @@ import psycopg2
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import logging
+import argparse
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')
 logger = logging.getLogger(__name__)
 
@@ -32,16 +33,18 @@ def fetch_rules(main_db_url, rule_ids):
 import multiprocessing
 
 
-def exec_rule_sandbox(rule_text, target_conn):
+def exec_rule_sandbox(rule_text, target_conn, allowed_imports: Optional[List[str]] = None):
     """Execute ``rule_text`` as Python code using ``target_conn`` in a restricted
     sandbox.
 
-    The sandbox disables imports and file/network access by limiting built-ins
-    and runs the code in a separate process which is terminated after one hour.
-    The executed code should store its result in a variable named ``result``.
+    The sandbox runs the rule in a separate process which is terminated after one
+    hour. Imports are currently unrestricted but a list of ``allowed_imports``
+    can be provided in the future to limit which modules may be imported.
+    The executed code should store its result in a variable named ``result`` or
+    provide a callable ``rule`` which returns the result.
     """
 
-    def worker(code, conn, out):
+    def worker(code, conn, out, imports):
         # Define a minimal set of safe builtins
         safe_builtins = {
             "True": True,
@@ -64,11 +67,14 @@ def exec_rule_sandbox(rule_text, target_conn):
             "Exception": Exception,
         }
 
-        # Block import statements to avoid access to the outside environment
-        def blocked_import(*_args, **_kwargs):  # pragma: no cover - simple guard
-            raise ImportError("Importing modules is disabled in sandbox")
+        def checked_import(name, globals=None, locals=None, fromlist=(), level=0):
+            base = name.split(".")[0]
+            if imports is not None and base not in imports:
+                raise ImportError(f"Import of '{base}' is not allowed")
+            return __import__(name, globals, locals, fromlist, level)
 
-        safe_builtins["__import__"] = blocked_import
+        # Allow all imports if ``imports`` is None
+        safe_builtins["__import__"] = checked_import
 
         # Locals available to the executed rule
         local_env = {
@@ -91,7 +97,7 @@ def exec_rule_sandbox(rule_text, target_conn):
 
     manager = multiprocessing.Manager()
     result_holder = manager.dict()
-    proc = multiprocessing.Process(target=worker, args=(rule_text, target_conn, result_holder))
+    proc = multiprocessing.Process(target=worker, args=(rule_text, target_conn, result_holder, allowed_imports))
     proc.start()
     proc.join(3600)  # 1 hour timeout
     if proc.is_alive():
@@ -131,7 +137,7 @@ def run_rules(request: RunRequest):
         target_conn = psycopg2.connect(conn_str)
         try:
             try:
-                result = exec_rule_sandbox(rule_text, target_conn)
+                result = exec_rule_sandbox(rule_text, target_conn, allowed_imports=None)
             except Exception as e:
                 logger.exception("Error executing sandbox for rule %s", rule_id)
                 result = {"error": str(e)}
@@ -151,6 +157,29 @@ def run_rules(request: RunRequest):
     write_conn.close()
     return {"results": results}
 
+def run_custom_code(code_str: str, conn_str: str):
+    """Execute arbitrary ``code_str`` using a database connection."""
+    conn = psycopg2.connect(conn_str)
+    try:
+        # No restrictions on imports for now
+        result = exec_rule_sandbox(code_str, conn, allowed_imports=None)
+    finally:
+        conn.close()
+    print(json.dumps({"result": result}, default=str))
+
+
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=80, log_level="info")
+    parser = argparse.ArgumentParser(description="Run stored rules or execute custom code.")
+    parser.add_argument("--code", help="Python code string or path to file to execute")
+    parser.add_argument("--conn", help="Database connection string")
+    args, unknown = parser.parse_known_args()
+
+    if args.code and args.conn:
+        code_content = args.code
+        if os.path.exists(args.code):
+            with open(args.code, "r") as f:
+                code_content = f.read()
+        run_custom_code(code_content, args.conn)
+    else:
+        import uvicorn
+        uvicorn.run(app, host="0.0.0.0", port=80, log_level="info")
