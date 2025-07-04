@@ -13,9 +13,21 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-def fetch_rules(main_db_url, rule_ids):
-    conn = psycopg2.connect(main_db_url)
-    cur = conn.cursor()
+def fetch_rules(main_db_url: str, rule_ids: List[str]):
+    """Retrieve rule definitions and their target connection strings.
+
+    Parameters
+    ----------
+    main_db_url : str
+        Connection string for the application's main database.
+    rule_ids : List[str]
+        List of rule UUIDs to fetch.
+
+    Returns
+    -------
+    list[tuple]
+        Tuples of ``(rule_id, rule_text, connection_string)``.
+    """
     placeholders = ",".join(["%s"] * len(rule_ids))
     sql = f"""
         SELECT r.id, r.rule_text, c.connection_string
@@ -23,12 +35,10 @@ def fetch_rules(main_db_url, rule_ids):
         JOIN db_connections c ON r.db_connection_id = c.id
         WHERE r.id IN ({placeholders})
     """
-    params = rule_ids
-    cur.execute(sql, params)
-    rules = cur.fetchall()
-    cur.close()
-    conn.close()
-    return rules
+    with psycopg2.connect(main_db_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, rule_ids)
+            return cur.fetchall()
 
 import multiprocessing
 
@@ -112,6 +122,11 @@ class RunRequest(BaseModel):
 
 @app.post("/run")
 def run_rules(request: RunRequest):
+    """Execute the given rules and store their results.
+
+    Each rule is fetched from the main database, executed in an isolated
+    subprocess, and the resulting data is written back to ``rule_results``.
+    """
     logger.info("run_rules endpoint called")
     logger.info("Received RunRequest with rule_ids=%s", request.rule_ids)
     MAIN_DB_URL = os.getenv("MAIN_DB_URL")
@@ -128,33 +143,34 @@ def run_rules(request: RunRequest):
         logger.warning("No rules found for rule_ids=%s", request.rule_ids)
         raise HTTPException(status_code=404, detail="No rules found")
 
-    write_conn = psycopg2.connect(MAIN_DB_URL)
-    write_cur = write_conn.cursor()
     results = {}
-    for rule_id, rule_text, conn_str in rules:
-        logger.info("Processing rule %s with connection %s", rule_id, conn_str)
-        ts = datetime.datetime.utcnow().isoformat()
-        target_conn = psycopg2.connect(conn_str)
-        try:
-            try:
-                result = exec_rule_sandbox(rule_text, target_conn, allowed_imports=None)
-            except Exception as e:
-                logger.exception("Error executing sandbox for rule %s", rule_id)
-                result = {"error": str(e)}
-        finally:
-            target_conn.close()
-        results[rule_id] = {
-            "result": result,
-            "db_connection": conn_str
-        }
-        write_cur.execute(
-            "INSERT INTO rule_results (rule_id, result) VALUES (%s, %s)",
-            (str(rule_id), json.dumps(results[rule_id]))
-        )
-        write_conn.commit()
-        logger.info("Result for rule %s committed to database: %s", rule_id, results[rule_id])
-    write_cur.close()
-    write_conn.close()
+    with psycopg2.connect(MAIN_DB_URL) as write_conn:
+        with write_conn.cursor() as write_cur:
+            for rule_id, rule_text, conn_str in rules:
+                logger.info("Processing rule %s with connection %s", rule_id, conn_str)
+                target_conn = psycopg2.connect(conn_str)
+                try:
+                    try:
+                        result = exec_rule_sandbox(rule_text, target_conn, allowed_imports=None)
+                    except Exception as e:
+                        logger.exception("Error executing sandbox for rule %s", rule_id)
+                        result = {"error": str(e)}
+                finally:
+                    target_conn.close()
+                results[rule_id] = {
+                    "result": result,
+                    "db_connection": conn_str
+                }
+                write_cur.execute(
+                    "INSERT INTO rule_results (rule_id, result) VALUES (%s, %s)",
+                    (str(rule_id), json.dumps(results[rule_id]))
+                )
+                write_conn.commit()
+                logger.info(
+                    "Result for rule %s committed to database: %s",
+                    rule_id,
+                    results[rule_id]
+                )
     return {"results": results}
 
 def run_custom_code(code_str: str, conn_str: str):
