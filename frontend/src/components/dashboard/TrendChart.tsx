@@ -87,10 +87,15 @@ const TrendChart: React.FC<Props> = ({
   // Filter trends to only those within the currently selected date range.
   // If rangeStart or rangeEnd are not set, fallback to initialStart/initialEnd.
   const filteredTrends = useMemo(() => {
+    const startThreshold = rangeStart ? new Date(rangeStart) : new Date(initialStart);
+    const endThreshold = rangeEnd ? new Date(rangeEnd) : new Date(initialEnd);
+
+    if (Number.isNaN(startThreshold.getTime()) || Number.isNaN(endThreshold.getTime()) || startThreshold > endThreshold) {
+      return [] as DashboardTrendItem[];
+    }
+
     return trends.filter(item => {
       const date = new Date(item.date);
-      const startThreshold = rangeStart ? new Date(rangeStart) : new Date(initialStart);
-      const endThreshold = rangeEnd ? new Date(rangeEnd) : new Date(initialEnd);
       return date >= startThreshold && date <= endThreshold;
     });
   }, [trends, rangeStart, rangeEnd, initialStart, initialEnd]);
@@ -103,12 +108,13 @@ const TrendChart: React.FC<Props> = ({
 
   // Prepare chart datasets: one dataset per rule, with points sorted by date.
   // Each dataset has a unique color based on its index.
-  const data: ChartData<'line'> = {
+  const data: ChartData<'line'> = useMemo(() => ({
     datasets: ruleNames.map((rule, idx) => {
       const color = `hsl(${(idx * 60) % 360}, 70%, 50%)`;
       const datasetPoints = filteredTrends
         .filter(item => item.rule_name === rule)
-        .map(item => ({ x: new Date(item.date).getTime(), y: item.count }));
+        .map(item => ({ x: new Date(item.date).getTime(), y: item.count }))
+        .sort((a, b) => a.x - b.x);
       return {
         label: rule,
         data: datasetPoints,
@@ -118,11 +124,12 @@ const TrendChart: React.FC<Props> = ({
         fill: false,
       };
     }),
-  };
+  }), [ruleNames, filteredTrends]);
 
   // Chart configuration options, including scales, zoom/pan plugin, and legend.
-  const options: ChartOptions<'line'> = {
+  const options: ChartOptions<'line'> = useMemo(() => ({
     responsive: true,
+    maintainAspectRatio: false,
     scales: {
       x: {
         type: 'time',
@@ -143,26 +150,19 @@ const TrendChart: React.FC<Props> = ({
           mode: 'x',
         },
         zoom: {
-          wheel: {
-            enabled: true,
-          },
-          pinch: {
-            enabled: true,
-          },
+          wheel: { enabled: true },
+          pinch: { enabled: true },
           drag: {
             enabled: true,
             backgroundColor: 'rgba(224,224,224,0.3)',
           },
           mode: 'x',
-          // When zooming completes, update the date range state to reflect the new bounds.
           onZoomComplete({ chart }: { chart: any }) {
-            // extract the new axis bounds from the chart's x scale
             const xScale = chart.scales.x;
             const min = xScale.min as number;
             const max = xScale.max as number;
-            // convert bounds to YYYY-MM-DD strings and update the date range state
-            const from = new Date(min).toISOString().slice(0,10);
-            const to = new Date(max).toISOString().slice(0,10);
+            const from = new Date(min).toISOString().slice(0, 10);
+            const to = new Date(max).toISOString().slice(0, 10);
             setRangeStart(from);
             setRangeEnd(to);
           },
@@ -170,7 +170,7 @@ const TrendChart: React.FC<Props> = ({
       } as any,
       legend: { position: 'top' },
     },
-  };
+  }), [rangeStart, rangeEnd]);
 
   return (
     <div className="mb-6">
