@@ -218,6 +218,11 @@ export interface DashboardResultItem {
   result: any;
 }
 
+export interface DashboardResultPage {
+  total: number;
+  items: DashboardResultItem[];
+}
+
 /**
  * Models a chat message exchanged in the ChatWidget component.
  * Used to display user and bot messages in the chat interface.

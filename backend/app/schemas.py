@@ -161,3 +161,9 @@ class DashboardResultItem(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class DashboardResultPage(BaseModel):
+    """Paged list of DashboardResultItem objects."""
+    total: int
+    items: List[DashboardResultItem]

@@ -8,7 +8,15 @@ import ShowRuleModal from '../db/ShowRuleModal';
 import { useStore } from '../../store/store';
 import axios from 'axios';
 import 'react-circular-progressbar/dist/styles.css';
-import type { DashboardKPI, DashboardTrendItem, DashboardTopViolations, DashboardResultItem, ColumnRule, Violation } from '../../types';
+import type {
+  DashboardKPI,
+  DashboardTrendItem,
+  DashboardTopViolations,
+  DashboardResultItem,
+  DashboardResultPage,
+  ColumnRule,
+  Violation,
+} from '../../types';
 import { brandColors } from '../../theme';
 
 import KpiTiles from './KpiTiles';
@@ -62,6 +70,9 @@ const Dashboard: React.FC = () => {
   const [reloadKey, setReloadKey] = useState<number>(0);
   // State holding recent rule execution results
   const [results, setResults] = useState<DashboardResultItem[]>([]);
+  const [resultsTotal, setResultsTotal] = useState<number>(0);
+  const [resultsPage, setResultsPage] = useState<number>(0);
+  const [resultsPerPage, setResultsPerPage] = useState<number>(10);
   const [allRules, setAllRules] = useState<string[]>([]);
   const [selectedRules, setSelectedRules] = useState<string[]>([]);
   // Ref for the trend chart component (used for imperative chart actions)
@@ -133,21 +144,30 @@ const Dashboard: React.FC = () => {
 
   }, [selectedDbId, rangeStart, rangeEnd, reloadKey]);
 
-  // Load recent rule results whenever filters change
+  // Load recent rule results whenever filters or pagination change
   useEffect(() => {
     if (!selectedDbId) return;
-    const ps: Record<string, any> = { db_conn_id: selectedDbId };
+    const ps: Record<string, any> = {
+      db_conn_id: selectedDbId,
+      limit: resultsPerPage,
+      offset: resultsPage * resultsPerPage,
+    };
     if (rangeStart) ps.date_from = rangeStart;
     if (rangeEnd) ps.date_to = rangeEnd;
     if (selectedRules.length > 0) ps.rules = selectedRules;
     const params = { params: ps };
-    axios.get<DashboardResultItem[]>(`${apiBase}/api/dashboard/results`, params)
-      .then(res => setResults(res.data))
+    axios
+      .get<DashboardResultPage>(`${apiBase}/api/dashboard/results`, params)
+      .then(res => {
+        setResults(res.data.items);
+        setResultsTotal(res.data.total);
+      })
       .catch(err => {
         console.error('Failed to fetch results:', err);
         setResults([]);
+        setResultsTotal(0);
       });
-  }, [selectedDbId, rangeStart, rangeEnd, reloadKey, selectedRules]);
+  }, [selectedDbId, rangeStart, rangeEnd, reloadKey, selectedRules, resultsPage, resultsPerPage]);
 
   /**
    * Handles sorting logic when user clicks on a sortable column.
@@ -217,7 +237,18 @@ const Dashboard: React.FC = () => {
         results={results}
         allRules={allRules}
         selectedRules={selectedRules}
-        onSelectedRulesChange={setSelectedRules}
+        onSelectedRulesChange={v => {
+          setResultsPage(0);
+          setSelectedRules(v);
+        }}
+        page={resultsPage}
+        rowsPerPage={resultsPerPage}
+        total={resultsTotal}
+        onPageChange={setResultsPage}
+        onRowsPerPageChange={rows => {
+          setResultsPerPage(rows);
+          setResultsPage(0);
+        }}
       />
       {/* Modal for showing detailed rule information when selected */}
       {selectedRule && (

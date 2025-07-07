@@ -368,6 +368,7 @@ def get_dashboard_results(
     date_to: datetime.date | None = None,
     limit: int = 100,
     rule_names: list[str] | None = None,
+    offset: int = 0,
 ):
     """Retrieve recent rule results for a connection with optional date range."""
     query = (
@@ -388,19 +389,25 @@ def get_dashboard_results(
     if rule_names:
         query = query.filter(models.ColumnRule.rule_name.in_(rule_names))
 
+    total = query.count()
+
     rows = (
         query.order_by(models.RuleResult.detected_at.desc())
+        .offset(offset)
         .limit(limit)
         .all()
     )
 
-    return [
-        {
-            "id": r.RuleResult.id,
-            "detected_at": r.RuleResult.detected_at,
-            "rule_id": r.RuleResult.rule_id,
-            "result": r.RuleResult.result,
-            "rule_name": r.rule_name,
-        }
-        for r in rows
-    ]
+    return {
+        "total": total,
+        "items": [
+            {
+                "id": r.RuleResult.id,
+                "detected_at": r.RuleResult.detected_at,
+                "rule_id": r.RuleResult.rule_id,
+                "result": r.RuleResult.result,
+                "rule_name": r.rule_name,
+            }
+            for r in rows
+        ],
+    }
