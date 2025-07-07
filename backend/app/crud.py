@@ -350,12 +350,24 @@ def get_column_rule_by_name(db: Session, rule_name: str) -> ColumnRule | None:
         .filter(models.ColumnRule.rule_name == rule_name)\
         .first()
 
+def get_rule_names(db: Session, conn_id: UUID) -> list[str]:
+    """Return all distinct rule names for a connection."""
+    rows = (
+        db.query(models.ColumnRule.rule_name)
+        .filter(models.ColumnRule.db_connection_id == conn_id)
+        .distinct()
+        .order_by(models.ColumnRule.rule_name)
+        .all()
+    )
+    return [r.rule_name for r in rows]
+
 def get_dashboard_results(
     db: Session,
     conn_id: UUID,
     date_from: datetime.date | None = None,
     date_to: datetime.date | None = None,
     limit: int = 100,
+    rule_names: list[str] | None = None,
 ):
     """Retrieve recent rule results for a connection with optional date range."""
     query = (
@@ -372,6 +384,9 @@ def get_dashboard_results(
         query = query.filter(
             models.RuleResult.detected_at <= datetime.datetime.combine(date_to, datetime.time.max)
         )
+
+    if rule_names:
+        query = query.filter(models.ColumnRule.rule_name.in_(rule_names))
 
     rows = (
         query.order_by(models.RuleResult.detected_at.desc())
