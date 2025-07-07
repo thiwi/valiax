@@ -8,13 +8,14 @@ import ShowRuleModal from '../db/ShowRuleModal';
 import { useStore } from '../../store/store';
 import axios from 'axios';
 import 'react-circular-progressbar/dist/styles.css';
-import type { DashboardKPI, DashboardTrendItem, DashboardTopViolations,ColumnRule,Violation } from '../../types';
+import type { DashboardKPI, DashboardTrendItem, DashboardTopViolations, DashboardResultItem, ColumnRule, Violation } from '../../types';
 import { brandColors } from '../../theme';
 
 import KpiTiles from './KpiTiles';
 import TrendChart from './TrendChart';
 import TopRules from './TopRules';
 import TopTables from './TopTables';
+import RuleResultsTable from './RuleResultsTable';
 
 // Define default date range: last 90 days until today
 const defaultEnd = new Date().toISOString().slice(0,10);
@@ -59,6 +60,8 @@ const Dashboard: React.FC = () => {
   const [rangeEnd, setRangeEnd] = useState<string>(defaultEnd);
   // State used to trigger reload of data by changing its value
   const [reloadKey, setReloadKey] = useState<number>(0);
+  // State holding recent rule execution results
+  const [results, setResults] = useState<DashboardResultItem[]>([]);
   // Ref for the trend chart component (used for imperative chart actions)
   const chartRef = React.useRef<any>(null);
 
@@ -113,6 +116,14 @@ const Dashboard: React.FC = () => {
         console.error('Failed to fetch top violations:', err);
         setTopRules([]);
         setTopTables([]);
+      });
+
+    // Fetch recent rule results
+    axios.get<DashboardResultItem[]>(`${apiBase}/api/dashboard/results`, params)
+      .then(res => setResults(res.data))
+      .catch(err => {
+        console.error('Failed to fetch results:', err);
+        setResults([]);
       });
   }, [selectedDbId, rangeStart, rangeEnd, reloadKey]);
 
@@ -180,6 +191,7 @@ const Dashboard: React.FC = () => {
         <TopRules topRules={topRules} handleRuleClick={handleRuleClick} />
         <TopTables topTables={topTables} />
       </div>
+      <RuleResultsTable results={results} />
       {/* Modal for showing detailed rule information when selected */}
       {selectedRule && (
         <ShowRuleModal
@@ -196,3 +208,4 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+

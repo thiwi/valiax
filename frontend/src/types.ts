@@ -208,6 +208,17 @@ export interface DashboardTrendItem {
 }
 
 /**
+ * Represents one stored result of a rule execution.
+ */
+export interface DashboardResultItem {
+  id: string;
+  detected_at: string;
+  rule_id: string;
+  rule_name: string;
+  result: any;
+}
+
+/**
  * Models a chat message exchanged in the ChatWidget component.
  * Used to display user and bot messages in the chat interface.
  */

@@ -31,17 +31,16 @@ logger = logging.getLogger(__name__)
 from app.crud import (
     get_dashboard_kpis,
     get_dashboard_trends,
-    get_dashboard_top_violations
+    get_dashboard_top_violations,
+    get_dashboard_results,
 )
-
-from uuid import UUID
 
 # Models & CRUD aus dem Unterpaket backend.app
 from app.models import DBConnection, ColumnRule
 from app import crud, schemas
 from app.database import get_db
 from app.schemas import ConnectionTestRequest, ConnectionTestResponse
-from app.schemas import DashboardKPI, DashboardTrendItem, DashboardTopViolations
+from app.schemas import DashboardKPI, DashboardTrendItem, DashboardTopViolations, DashboardResultItem
 
 app = FastAPI()
 
@@ -382,6 +381,18 @@ def dashboard_top_violations(
         DashboardTopViolations: Top rules and tables by violations.
     """
     return get_dashboard_top_violations(db, db_conn_id, date_from, date_to)
+
+
+@app.get("/api/dashboard/results", response_model=List[DashboardResultItem])
+def dashboard_results(
+    db_conn_id: UUID = Query(..., alias="db_conn_id"),
+    date_from: datetime.date | None = Query(None),
+    date_to: datetime.date | None = Query(None),
+    limit: int = Query(100),
+    db: Session = Depends(get_db),
+):
+    """Return recent rule results for a connection."""
+    return get_dashboard_results(db, db_conn_id, date_from, date_to, limit)
 
 @app.websocket("/ws/chat")
 async def chat_ws(websocket: WebSocket):

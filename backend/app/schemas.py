@@ -149,3 +149,15 @@ class DashboardTopViolations(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class DashboardResultItem(BaseModel):
+    """Schema for a single rule result shown on the dashboard."""
+    id: UUID
+    detected_at: datetime.datetime
+    rule_id: UUID
+    rule_name: str
+    result: Dict
+
+    class Config:
+        from_attributes = True

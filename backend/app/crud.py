@@ -349,3 +349,43 @@ def get_column_rule_by_name(db: Session, rule_name: str) -> ColumnRule | None:
     return db.query(models.ColumnRule)\
         .filter(models.ColumnRule.rule_name == rule_name)\
         .first()
+
+def get_dashboard_results(
+    db: Session,
+    conn_id: UUID,
+    date_from: datetime.date | None = None,
+    date_to: datetime.date | None = None,
+    limit: int = 100,
+):
+    """Retrieve recent rule results for a connection with optional date range."""
+    query = (
+        db.query(models.RuleResult, models.ColumnRule.rule_name)
+        .join(models.ColumnRule, models.RuleResult.rule_id == models.ColumnRule.id)
+        .filter(models.ColumnRule.db_connection_id == conn_id)
+    )
+
+    if date_from:
+        query = query.filter(
+            models.RuleResult.detected_at >= datetime.datetime.combine(date_from, datetime.time.min)
+        )
+    if date_to:
+        query = query.filter(
+            models.RuleResult.detected_at <= datetime.datetime.combine(date_to, datetime.time.max)
+        )
+
+    rows = (
+        query.order_by(models.RuleResult.detected_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "id": r.RuleResult.id,
+            "detected_at": r.RuleResult.detected_at,
+            "rule_id": r.RuleResult.rule_id,
+            "result": r.RuleResult.result,
+            "rule_name": r.rule_name,
+        }
+        for r in rows
+    ]
