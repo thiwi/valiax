@@ -1,18 +1,29 @@
+"""Utility script for listing all rules that are due for execution."""
+
 import os
 import json
 import psycopg2
 from datetime import datetime, timedelta
 
+# Connection string for the application's metadata database. This must be
+# provided via the ``MAIN_DB_URL`` environment variable when the script runs.
 MAIN_DB_URL = os.environ.get("MAIN_DB_URL")
 
 if not MAIN_DB_URL:
     raise EnvironmentError("MAIN_DB_URL environment variable is not set.")
 
 def get_due_rules():
+    """Return a list of rule groups that should be executed now."""
+
+    # Connect to the application's main database to read rule metadata
     conn = psycopg2.connect(MAIN_DB_URL)
     cur = conn.cursor()
 
-    cur.execute("""
+    # Fetch all rules whose next scheduled run time has passed. The query
+    # groups rule results by ``rule_id`` to determine the last execution time
+    # and compares it to the rule's configured interval.
+    cur.execute(
+        """
         SELECT cr.id::text, cr.db_connection_id::text
         FROM column_rules cr
         LEFT JOIN (
@@ -33,7 +44,8 @@ def get_due_rules():
               cr.interval = 'weekly' AND rr.last_run <= NOW() - INTERVAL '7 days'
             )
           )
-    """)
+        """
+    )
 
     rows = cur.fetchall()
     conn.close()

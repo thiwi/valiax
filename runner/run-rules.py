@@ -1,3 +1,5 @@
+"""HTTP service that executes stored data quality rules in isolation."""
+
 import os
 import json
 import datetime
