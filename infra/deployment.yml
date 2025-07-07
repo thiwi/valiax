@@ -464,10 +464,15 @@ spec:
         volumeMounts:
         - name: ecommerce-data2
           mountPath: /var/lib/postgresql/data
+        - name: initdb2
+          mountPath: /docker-entrypoint-initdb.d
       volumes:
       - name: ecommerce-data2
         persistentVolumeClaim:
           claimName: ecommerce-data2
+      - name: initdb2
+        configMap:
+          name: ecommerce-init-2
 
 ---
 # ClusterIP service for ecommerce-db-2 on port 5432

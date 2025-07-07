@@ -47,12 +47,20 @@ for entry in "${IMAGES[@]}"; do
 done
 
 
-# Create or update ConfigMap for ecommerce DB init scripts
+# Create or update ConfigMaps for ecommerce DB init scripts
 echo "📑 Creating ConfigMap for ecommerce init scripts…"
+# Resolve repository root so the script works from any location
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# One configmap per ecommerce database to allow individual initialization
 kubectl delete configmap ecommerce-init-1 -n valiax --ignore-not-found
 kubectl create configmap ecommerce-init-1 \
-  --from-file=init1.sql=/Users/thilowilts/Code/valiax/ecommerce-init-1/init.sql \
-  --from-file=init2.sql=/Users/thilowilts/Code/valiax/ecommerce-init-2/init.sql \
+  --from-file=init.sql="$REPO_ROOT/ecommerce-init-1/init.sql" \
+  -n valiax
+
+kubectl delete configmap ecommerce-init-2 -n valiax --ignore-not-found
+kubectl create configmap ecommerce-init-2 \
+  --from-file=init.sql="$REPO_ROOT/ecommerce-init-2/init.sql" \
   -n valiax
 
 # Create or update ConfigMap for backend initialization scripts
