@@ -2,6 +2,8 @@ import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS for consi
 import './index.css'; // Import custom global CSS styles specific to this project
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import RuleDetailPage from "./components/dashboard/RuleDetailPage";
 import App from './App';
 
 // Create a root container for the React application.
@@ -16,10 +18,11 @@ root.render(
   // It activates additional checks and warnings for its descendants during development,
   // but does not affect the production build.
   <React.StrictMode>
-    {/* 
-      The <App /> component is the root component of the React application.
-      It serves as the main entry point for the UI, managing the overall structure and routing.
-    */}
-    <App />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/rule/:ruleName" element={<RuleDetailPage />} />
+        <Route path="*" element={<App />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );

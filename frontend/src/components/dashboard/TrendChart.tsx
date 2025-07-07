@@ -3,6 +3,7 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 import 'chartjs-adapter-date-fns';
 import React, { useMemo, useEffect, type MutableRefObject } from 'react';
 import { Line } from 'react-chartjs-2';
+import { useNavigate } from "react-router-dom";
 import type { DashboardTrendItem } from '../../types';
 import type { ChartOptions, ChartData } from 'chart.js';
 import Button from '@mui/material/Button';
@@ -62,6 +63,7 @@ const TrendChart: React.FC<Props> = ({
   const [initialStart, setInitialStart] = React.useState<string>('');
   const [initialEnd, setInitialEnd] = React.useState<string>('');
 
+  const navigate = useNavigate();
   useEffect(() => {
     // When trend data changes, determine a default date range to display.
     // The default range is the latest date in the data going back 90 days,
@@ -150,11 +152,10 @@ const TrendChart: React.FC<Props> = ({
           mode: 'x',
         },
         zoom: {
-          wheel: { enabled: true },
-          pinch: { enabled: true },
+          wheel: { enabled: false },
+          pinch: { enabled: false },
           drag: {
-            enabled: true,
-            backgroundColor: 'rgba(224,224,224,0.3)',
+            enabled: false,
           },
           mode: 'x',
           onZoomComplete({ chart }: { chart: any }) {
@@ -170,6 +171,13 @@ const TrendChart: React.FC<Props> = ({
       } as any,
       legend: { position: 'top' },
     },
+  onClick: (_e, els, chart) => {
+    if (els.length > 0) {
+      const idx = els[0].datasetIndex;
+      const ds = chart.data.datasets[idx];
+      if (ds && ds.label) navigate(`/rule/${encodeURIComponent(ds.label)}`);
+    }
+  }
   }), [rangeStart, rangeEnd]);
 
   return (
@@ -215,8 +223,13 @@ const TrendChart: React.FC<Props> = ({
           Reset timeframe
         </Button>
       </div>
-      {/* Line chart displaying the filtered trend data over the selected date range */}
-      <Line data={data} options={options} redraw ref={chartRef} />
+      <div className="relative h-96">
+        <Line data={data} options={options} redraw ref={chartRef} />
+        <div className="absolute top-2 right-2 space-x-1">
+          <Button size="small" variant="outlined" onClick={() => chartRef.current?.zoom(1.2)}>+</Button>
+          <Button size="small" variant="outlined" onClick={() => chartRef.current?.zoom(0.8)}>-</Button>
+        </div>
+      </div>
     </div>
   );
 };
