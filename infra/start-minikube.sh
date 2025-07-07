@@ -46,6 +46,15 @@ for entry in "${IMAGES[@]}"; do
   minikube image load "$TAG"
 done
 
+
+# Create or update ConfigMap for ecommerce DB init scripts
+echo "📑 Creating ConfigMap for ecommerce init scripts…"
+kubectl delete configmap ecommerce-init-1 -n valiax --ignore-not-found
+kubectl create configmap ecommerce-init-1 \
+  --from-file=init1.sql=/Users/thilowilts/Code/valiax/ecommerce-init-1/init.sql \
+  --from-file=init2.sql=/Users/thilowilts/Code/valiax/ecommerce-init-2/init.sql \
+  -n valiax
+
 # Create or update ConfigMap for backend initialization scripts
 echo "📑 Creating ConfigMap for init scripts…"
 kubectl create configmap backend-initdb --from-file=../backend/initdb --dry-run=client -o yaml | kubectl apply -f -
