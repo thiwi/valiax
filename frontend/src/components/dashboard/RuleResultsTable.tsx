@@ -1,5 +1,16 @@
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, TextField } from '@mui/material';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Autocomplete,
+  TextField,
+  TablePagination,
+} from '@mui/material';
 import type { DashboardResultItem } from '../../types';
 
 interface Props {
@@ -7,9 +18,24 @@ interface Props {
   allRules: string[];
   selectedRules: string[];
   onSelectedRulesChange: (v: string[]) => void;
+  page: number;
+  rowsPerPage: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  onRowsPerPageChange: (rows: number) => void;
 }
 
-const RuleResultsTable: React.FC<Props> = ({ results, allRules, selectedRules, onSelectedRulesChange }) => {
+const RuleResultsTable: React.FC<Props> = ({
+  results,
+  allRules,
+  selectedRules,
+  onSelectedRulesChange,
+  page,
+  rowsPerPage,
+  total,
+  onPageChange,
+  onRowsPerPageChange,
+}) => {
   const filteredResults = React.useMemo(
     () => results.filter(r => selectedRules.length === 0 || selectedRules.includes(r.rule_name)),
     [results, selectedRules]
@@ -50,6 +76,15 @@ const RuleResultsTable: React.FC<Props> = ({ results, allRules, selectedRules, o
             ))}
           </TableBody>
         </Table>
+        <TablePagination
+          component="div"
+          count={total}
+          page={page}
+          onPageChange={(_, p) => onPageChange(p)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={e => onRowsPerPageChange(parseInt(e.target.value, 10))}
+          rowsPerPageOptions={[5, 10, 25]}
+        />
       </TableContainer>
     </div>
   );
