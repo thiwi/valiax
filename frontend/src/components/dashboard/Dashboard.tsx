@@ -62,11 +62,24 @@ const Dashboard: React.FC = () => {
   const [reloadKey, setReloadKey] = useState<number>(0);
   // State holding recent rule execution results
   const [results, setResults] = useState<DashboardResultItem[]>([]);
+  const [allRules, setAllRules] = useState<string[]>([]);
+  const [selectedRules, setSelectedRules] = useState<string[]>([]);
   // Ref for the trend chart component (used for imperative chart actions)
   const chartRef = React.useRef<any>(null);
 
   // Base URL for API calls from environment variable or empty string
   const apiBase = process.env.REACT_APP_API_URL || '';
+
+  // Load all rule names for the selected database
+  useEffect(() => {
+    if (!selectedDbId) return;
+    axios.get<string[]>(`${apiBase}/api/db-connections/${selectedDbId}/rules`)
+      .then(res => setAllRules(res.data))
+      .catch(err => {
+        console.error('Failed to fetch rule names:', err);
+        setAllRules([]);
+      });
+  }, [selectedDbId]);
 
   /**
    * Effect hook to fetch dashboard data whenever the selected database,
@@ -118,14 +131,23 @@ const Dashboard: React.FC = () => {
         setTopTables([]);
       });
 
-    // Fetch recent rule results
+  }, [selectedDbId, rangeStart, rangeEnd, reloadKey]);
+
+  // Load recent rule results whenever filters change
+  useEffect(() => {
+    if (!selectedDbId) return;
+    const ps: Record<string, any> = { db_conn_id: selectedDbId };
+    if (rangeStart) ps.date_from = rangeStart;
+    if (rangeEnd) ps.date_to = rangeEnd;
+    if (selectedRules.length > 0) ps.rules = selectedRules;
+    const params = { params: ps };
     axios.get<DashboardResultItem[]>(`${apiBase}/api/dashboard/results`, params)
       .then(res => setResults(res.data))
       .catch(err => {
         console.error('Failed to fetch results:', err);
         setResults([]);
       });
-  }, [selectedDbId, rangeStart, rangeEnd, reloadKey]);
+  }, [selectedDbId, rangeStart, rangeEnd, reloadKey, selectedRules]);
 
   /**
    * Handles sorting logic when user clicks on a sortable column.
@@ -191,7 +213,12 @@ const Dashboard: React.FC = () => {
         <TopRules topRules={topRules} handleRuleClick={handleRuleClick} />
         <TopTables topTables={topTables} />
       </div>
-      <RuleResultsTable results={results} />
+      <RuleResultsTable
+        results={results}
+        allRules={allRules}
+        selectedRules={selectedRules}
+        onSelectedRulesChange={setSelectedRules}
+      />
       {/* Modal for showing detailed rule information when selected */}
       {selectedRule && (
         <ShowRuleModal

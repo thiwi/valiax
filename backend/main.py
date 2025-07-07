@@ -319,6 +319,12 @@ def get_rule_by_name(rule_name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Rule not found")
     return rule
 
+
+@app.get("/api/db-connections/{connection_id}/rules", response_model=List[str])
+def list_rule_names(connection_id: UUID, db: Session = Depends(get_db)):
+    """Return all rule names for a given connection."""
+    return crud.get_rule_names(db, connection_id)
+
 @app.get("/api/dashboard/kpis", response_model=DashboardKPI)
 def dashboard_kpis(
     db_conn_id: UUID = Query(..., alias="db_conn_id"),
@@ -389,10 +395,11 @@ def dashboard_results(
     date_from: datetime.date | None = Query(None),
     date_to: datetime.date | None = Query(None),
     limit: int = Query(100),
+    rules: List[str] | None = Query(None),
     db: Session = Depends(get_db),
 ):
     """Return recent rule results for a connection."""
-    return get_dashboard_results(db, db_conn_id, date_from, date_to, limit)
+    return get_dashboard_results(db, db_conn_id, date_from, date_to, limit, rules)
 
 @app.websocket("/ws/chat")
 async def chat_ws(websocket: WebSocket):

@@ -1,12 +1,26 @@
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Autocomplete, TextField } from '@mui/material';
 import type { DashboardResultItem } from '../../types';
 
-interface Props { results: DashboardResultItem[]; }
+interface Props {
+  results: DashboardResultItem[];
+  allRules: string[];
+  selectedRules: string[];
+  onSelectedRulesChange: (v: string[]) => void;
+}
 
-const RuleResultsTable: React.FC<Props> = ({ results }) => (
+const RuleResultsTable: React.FC<Props> = ({ results, allRules, selectedRules, onSelectedRulesChange }) => (
   <div>
     <h3 className="text-xl font-semibold mb-2">Latest Rule Results</h3>
+    <Autocomplete
+      multiple
+      size="small"
+      options={allRules}
+      value={selectedRules}
+      onChange={(_, v) => onSelectedRulesChange(v as string[])}
+      renderInput={(params) => <TextField {...params} label="Filter rules" placeholder="All" />}
+      sx={{ mb: 1, width: 300 }}
+    />
     <TableContainer component={Paper}>
       <Table size="small">
         <TableHead>
