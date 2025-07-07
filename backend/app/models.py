@@ -1,3 +1,5 @@
+"""SQLAlchemy ORM models used by the Valiax backend."""
+
 import uuid
 from sqlalchemy import Column, String, Text, ForeignKey, DateTime, JSON, Integer
 from sqlalchemy.dialects.postgresql import UUID

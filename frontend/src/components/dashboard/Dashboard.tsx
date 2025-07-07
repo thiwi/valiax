@@ -1,3 +1,8 @@
+// Dashboard.tsx
+//
+// React component responsible for displaying KPI tiles, trend charts and a list
+// of top violations for the currently selected database connection.
+
 import React, { useState, useEffect } from 'react';
 import ShowRuleModal from '../db/ShowRuleModal';
 import { useStore } from '../../store/store';

@@ -1,3 +1,5 @@
+"""FastAPI service exposing the local language model over HTTP."""
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from llm import ask_llm

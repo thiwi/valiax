@@ -1,3 +1,5 @@
+"""Database engine and session management for the Valiax backend."""
+
 import os
 from dotenv import load_dotenv
 

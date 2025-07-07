@@ -1,3 +1,9 @@
+// ChatWidget.tsx
+//
+// Encapsulates the entire chat interface including history display and message
+// input. Communicates with the backend over WebSocket for live conversation
+// and can optionally attach column information for rule creation.
+
 import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import {
   Box,

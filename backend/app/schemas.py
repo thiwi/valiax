@@ -1,3 +1,5 @@
+"""Pydantic schema definitions for API request and response models."""
+
 import datetime
 from pydantic import BaseModel
 from uuid import UUID
