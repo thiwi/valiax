@@ -82,8 +82,11 @@ const RuleResultsTable: React.FC<Props> = ({
           page={page}
           onPageChange={(_, p) => onPageChange(p)}
           rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={e => onRowsPerPageChange(parseInt(e.target.value, 10))}
+          onRowsPerPageChange={e =>
+            onRowsPerPageChange(parseInt(e.target.value, 10))
+          }
           rowsPerPageOptions={[5, 10, 25]}
+          sx={{ pb: 8 }}
         />
       </TableContainer>
     </div>
