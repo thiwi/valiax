@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+# Comma-separated list of modules allowed to be imported in sandboxed rules
+DEFAULT_ALLOWED_IMPORTS = [m.strip() for m in os.getenv("RUNNER_ALLOWED_IMPORTS", "pandas,datetime,psycopg2").split(",") if m.strip()]
+
 def fetch_rules(main_db_url: str, rule_ids: List[str]):
     """Retrieve rule definitions and their target connection strings.
 
@@ -153,7 +156,7 @@ def run_rules(request: RunRequest):
                 target_conn = psycopg2.connect(conn_str)
                 try:
                     try:
-                        result = exec_rule_sandbox(rule_text, target_conn, allowed_imports=None)
+                        result = exec_rule_sandbox(rule_text, target_conn, allowed_imports=DEFAULT_ALLOWED_IMPORTS)
                     except Exception as e:
                         logger.exception("Error executing sandbox for rule %s", rule_id)
                         result = {"error": str(e)}
@@ -179,8 +182,7 @@ def run_custom_code(code_str: str, conn_str: str):
     """Execute arbitrary ``code_str`` using a database connection."""
     conn = psycopg2.connect(conn_str)
     try:
-        # No restrictions on imports for now
-        result = exec_rule_sandbox(code_str, conn, allowed_imports=None)
+        result = exec_rule_sandbox(code_str, conn, allowed_imports=DEFAULT_ALLOWED_IMPORTS)
     finally:
         conn.close()
     print(json.dumps({"result": result}, default=str))

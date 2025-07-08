@@ -131,7 +131,8 @@ class TestCrudOperations(unittest.TestCase):
             "email LIKE '%@%.%'",
             "medium",
             "daily",
-            "Checks if email format is valid"
+            "Checks if email format is valid",
+            True
         )
         
         # Assertions

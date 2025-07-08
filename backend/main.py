@@ -16,7 +16,7 @@ Intended for use with a frontend (e.g., React) and an LLM microservice.
 """
 import os
 import httpx
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Query, Header
 import datetime
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, inspect
@@ -48,7 +48,14 @@ from app.schemas import (
     DashboardResultPage,
 )
 
-app = FastAPI()
+# Optional API key authentication
+API_KEY = os.getenv("API_KEY")
+
+def require_api_key(x_api_key: str | None = Header(None)):
+    if API_KEY and x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+app = FastAPI(dependencies=[Depends(require_api_key)])
 
 # Enable CORS to allow the frontend (e.g. React) to communicate with this API.
 origins_env = os.getenv("CORS_ORIGINS", "*")
