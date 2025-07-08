@@ -60,7 +60,9 @@ def delete_db_connection(db: Session, connection_id: UUID) -> bool:
     db.commit()        # Commit changes to the database
     return True
 
-def create_column_rule(db: Session, connection_id: UUID, table: str, column: str, rule_name: str, rule_text: str, severity: str, interval: str, description: str):
+def create_column_rule(db: Session, connection_id: UUID, table: str, column: str,
+                       rule_name: str, rule_text: str, severity: str, interval: str,
+                       description: str, active: bool = True):
     """
     Create a new ColumnRule record associated with a database connection.
 
@@ -74,6 +76,7 @@ def create_column_rule(db: Session, connection_id: UUID, table: str, column: str
         severity (str): Severity level of the rule (e.g., 'critical').
         interval (str): Interval for checking the rule.
         description (str): Description of the rule.
+        active (bool): Whether the rule should be scheduled.
 
     Returns:
         The newly created ColumnRule model instance.
@@ -87,7 +90,8 @@ def create_column_rule(db: Session, connection_id: UUID, table: str, column: str
         rule_text=rule_text,
         severity=severity,
         interval=interval,
-        description=description
+        description=description,
+        active=active
     )
     db.add(new_rule)      # Add to session
     db.commit()           # Persist to database

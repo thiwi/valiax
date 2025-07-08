@@ -53,6 +53,7 @@ class ColumnRuleCreate(BaseModel):
     severity: str  # Severity level (e.g., 'critical', 'warning')
     interval: str  # How often the rule should be checked (e.g., 'daily')
     description: str  # Description of the rule's purpose
+    active: bool = True  # Whether the rule is enabled
 
 
 
@@ -70,6 +71,8 @@ class ColumnRuleRead(BaseModel):
     severity: str  # Severity level
     interval: str  # How often the rule is checked
     description: str | None = None  # Optional description
+    active: bool
+    created_at: datetime.datetime
 
     class Config:
         from_attributes = True

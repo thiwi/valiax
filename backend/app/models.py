@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models used by the Valiax backend."""
 
 import uuid
-from sqlalchemy import Column, String, Text, ForeignKey, DateTime, JSON, Integer
+from sqlalchemy import Column, String, Text, ForeignKey, DateTime, JSON, Integer, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -64,6 +64,12 @@ class ColumnRule(Base):
 
     # Optional detailed description explaining the purpose or details of the rule
     description = Column(Text, nullable=True)
+
+    # Indicates whether the rule is active and should be scheduled
+    active = Column(Boolean, nullable=False, default=True)
+
+    # Timestamp when the rule was created
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     # Relationship to RuleResult objects that store the outcomes of rule evaluations.
     # Cascade delete ensures related results are deleted if the rule is removed.
