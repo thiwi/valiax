@@ -7,6 +7,8 @@ from pydantic import BaseModel
 import traceback
 
 class AskRequest(BaseModel):
+    """Request body for the ``/ask`` endpoint."""
+
     prompt: str
 
 app = FastAPI(debug=True)
@@ -23,10 +25,14 @@ app.add_middleware(
 
 @app.get("/health")
 async def health():
+    """Simple health check endpoint returning ``{"status": "ok"}``."""
+
     return {"status": "ok"}
 
 @app.post("/ask")
 async def ask(request: AskRequest):
+    """Return the LLM's response for the provided prompt."""
+
     try:
         response = ask_llm(request.prompt)
         return {"response": response}
