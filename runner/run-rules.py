@@ -123,6 +123,8 @@ def exec_rule_sandbox(rule_text, target_conn, allowed_imports: Optional[List[str
     return result_holder.get("result", result_holder.get("error"))
 
 class RunRequest(BaseModel):
+    """Payload for the ``/run`` endpoint specifying which rules to execute."""
+
     rule_ids: List[str]
 
 @app.post("/run")
