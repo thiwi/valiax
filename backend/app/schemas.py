@@ -170,3 +170,8 @@ class DashboardResultPage(BaseModel):
     """Paged list of DashboardResultItem objects."""
     total: int
     items: List[DashboardResultItem]
+
+
+class SessionResponse(BaseModel):
+    """Simple session identifier returned by ``/api/session``."""
+    session_id: str

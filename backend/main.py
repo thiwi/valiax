@@ -22,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
 from typing import List
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import logging
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ from app.crud import (
 from app.models import DBConnection, ColumnRule
 from app import crud, schemas
 from app.database import get_db
-from app.schemas import ConnectionTestRequest, ConnectionTestResponse
+from app.schemas import ConnectionTestRequest, ConnectionTestResponse, SessionResponse
 from app.schemas import (
     DashboardKPI,
     DashboardTrendItem,
@@ -90,6 +90,12 @@ async def query_llm(prompt: str) -> str:
         resp.raise_for_status()
         data = resp.json()
     return data.get("response", "")
+
+
+@app.post("/api/session", response_model=schemas.SessionResponse)
+def create_session() -> schemas.SessionResponse:
+    """Return a new session identifier for the client."""
+    return schemas.SessionResponse(session_id=str(uuid4()))
 
 @app.post("/api/test-connection", response_model=ConnectionTestResponse)
 def test_connection(req: ConnectionTestRequest):

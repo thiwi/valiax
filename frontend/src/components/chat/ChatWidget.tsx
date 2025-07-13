@@ -7,7 +7,8 @@
 import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import {
   Box,
-  Paper,
+  Card,
+  CardContent,
   Typography,
   Collapse,
   Divider,
@@ -403,42 +404,44 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ connectionId }) => {
           color: theme.palette.primary.contrastText,
         })
       }}>
-        <Paper elevation={4} sx={{ borderRadius: '16px' }}>
-          {/* Header component with controls to open/close the chat */}
-          <ChatHeader
-            expanded={expanded}
-            onOpen={() => setExpanded(true)}
-            onClose={() => setExpanded(false)}
-          />
-          {/* Collapse component to show/hide chat content */}
-          <Collapse in={expanded}>
-            {/* Chat history showing all messages and loading indicator */}
-            <ChatHistory
-              messages={messages}
-              loading={loading}
-              historyRef={historyRef}
+        <Card sx={{ borderRadius: '16px', boxShadow: 4 }}>
+          <CardContent>
+            {/* Header component with controls to open/close the chat */}
+            <ChatHeader
+              expanded={expanded}
+              onOpen={() => setExpanded(true)}
+              onClose={() => setExpanded(false)}
             />
-            {/* Chat input form with various props for interaction */}
-            <ChatForm
-              input={input}
-              onInputChange={e => setInput(e.target.value)}
-              onSubmit={handleSend}
-              ruleCreation={ruleCreation}
-              selectedColumns={selectedColumns}
-              onRemoveColumn={(column) => {
-                // Remove a selected column from the set when requested.
-                setSelectedColumns(prev => {
-                  const next = new Set(prev);
-                  next.delete(column);
-                  return next;
-                });
-              }}
-              onToggleRuleCreation={checked => setRuleCreation(checked)}
-              onOpenColumns={() => setColumnModalOpen(true)}
-              onOpenChat={() => setExpanded(true)}
-            />
-          </Collapse>
-        </Paper>
+            {/* Collapse component to show/hide chat content */}
+            <Collapse in={expanded}>
+              {/* Chat history showing all messages and loading indicator */}
+              <ChatHistory
+                messages={messages}
+                loading={loading}
+                historyRef={historyRef}
+              />
+              {/* Chat input form with various props for interaction */}
+              <ChatForm
+                input={input}
+                onInputChange={e => setInput(e.target.value)}
+                onSubmit={handleSend}
+                ruleCreation={ruleCreation}
+                selectedColumns={selectedColumns}
+                onRemoveColumn={(column) => {
+                  // Remove a selected column from the set when requested.
+                  setSelectedColumns(prev => {
+                    const next = new Set(prev);
+                    next.delete(column);
+                    return next;
+                  });
+                }}
+                onToggleRuleCreation={checked => setRuleCreation(checked)}
+                onOpenColumns={() => setColumnModalOpen(true)}
+                onOpenChat={() => setExpanded(true)}
+              />
+            </Collapse>
+          </CardContent>
+        </Card>
         {/* Modal dialog for selecting which columns to include in prompts */}
         <IncludeColumnsModal
           open={columnModalOpen}
